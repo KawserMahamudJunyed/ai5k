@@ -1,0 +1,76 @@
+{
+  "system_version": "2.0.0",
+  "gig_count": 5,
+  "gigs": [
+    {
+      "gig_id": "GIG_01",
+      "slug": "custom-enterprise-rag-chatbot",
+      "recommended_title": "I will build an enterprise RAG chatbot and AI knowledge base",
+      "category": "Programming & Tech",
+      "subcategory": "AI Development",
+      "service_type": "AI Chatbot Development",
+      "tags": ["rag chatbot", "ai knowledge base", "langchain", "pinecone", "enterprise ai"],
+      "pricing": {
+        "basic": 300,
+        "standard": 950,
+        "premium": 2500
+      }
+    },
+    {
+      "gig_id": "GIG_02",
+      "slug": "autonomous-ai-agents-langgraph-crewai",
+      "recommended_title": "I will build autonomous AI agents and multi agent workflows",
+      "category": "Programming & Tech",
+      "subcategory": "AI Development",
+      "service_type": "AI Agent Development",
+      "tags": ["ai agent", "langgraph", "crewai", "multi agent system", "ai automation"],
+      "pricing": {
+        "basic": 450,
+        "standard": 1400,
+        "premium": 3500
+      }
+    },
+    {
+      "gig_id": "GIG_03",
+      "slug": "n8n-make-ai-workflow-automation",
+      "recommended_title": "I will build n8n and make AI workflow automations and integrations",
+      "category": "Programming & Tech",
+      "subcategory": "AI Development",
+      "service_type": "AI Integration & Automation",
+      "tags": ["n8n", "make com", "ai automation", "zapier ai", "api integration"],
+      "pricing": {
+        "basic": 200,
+        "standard": 650,
+        "premium": 1500
+      }
+    },
+    {
+      "gig_id": "GIG_04",
+      "slug": "custom-ai-saas-mvp-application",
+      "recommended_title": "I will build custom AI SaaS MVP and web applications",
+      "category": "Programming & Tech",
+      "subcategory": "AI Development",
+      "service_type": "AI Application Development",
+      "tags": ["ai saas", "ai mvp", "openai app", "full stack ai", "fastapi nextjs"],
+      "pricing": {
+        "basic": 500,
+        "standard": 1800,
+        "premium": 4500
+      }
+    },
+    {
+      "gig_id": "GIG_05",
+      "slug": "ai-architecture-security-cost-audit",
+      "recommended_title": "I will audit your AI architecture security cost and performance",
+      "category": "Programming & Tech",
+      "subcategory": "AI Development",
+      "service_type": "AI Consulting & Strategy",
+      "tags": ["ai architecture", "ai security", "aws bedrock", "llm cost audit", "ai consulting"],
+      "pricing": {
+        "basic": 250,
+        "standard": 750,
+        "premium": 1800
+      }
+    }
+  ]
+}

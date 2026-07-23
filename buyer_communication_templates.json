@@ -1,0 +1,37 @@
+{
+  "system_version": "2.0.0",
+  "templates_count": 22,
+  "compliance": "Fiverr Terms of Service 2025/2026",
+  "templates": [
+    {
+      "id": "T01",
+      "name": "Instant First Response",
+      "trigger": "New Inquiry",
+      "text": "Hi [Buyer Name],\n\nThank you for reaching out! I've reviewed your request regarding [Project Focus]. With over 30 years of technology leadership and AI cloud architecture experience, I can certainly assist you in building a secure, production-ready solution.\n\nTo ensure I provide you with an exact technical scope and timeline, could you briefly share:\n1. What document types or data sources need to be connected?\n2. Do you have a preferred platform or cloud environment (AWS, Vercel, Docker)?\n3. What is your ideal target delivery date?\n\nOnce you confirm these details, I will outline the recommended architecture and next steps. Looking forward to working together!\n\nBest regards,\nAlex | Enterprise AI Architect"
+    },
+    {
+      "id": "T02",
+      "name": "Explaining Third-Party API & Cloud Costs",
+      "trigger": "Scoping / Inquiry",
+      "text": "Hi [Buyer Name],\n\nTo ensure total transparency before we begin: as is standard in enterprise software development, the monthly usage costs for third-party services (such as OpenAI/Anthropic API consumption, Pinecone vector storage, or AWS hosting) are billed directly to your own accounts.\n\nDuring our build, I will implement smart prompt caching, chunking, and token guardrails to keep your operational API expenses as low as possible. I will also guide you step-by-step on how to set up usage caps and spending alerts in your API dashboards.\n\nPlease let me know if you have any questions on API billing!"
+    },
+    {
+      "id": "T03",
+      "name": "Proposing Paid Discovery Sprint",
+      "trigger": "Complex Enterprise Inquiry",
+      "text": "Hi [Buyer Name],\n\nThank you for sharing your project vision. Because your enterprise AI system involves [multiple data sources / multi-agent workflows / custom security requirements], proceeding straight to development without a validated architectural plan carries a high risk of scope misalignment and unexpected cost inflation.\n\nI recommend starting with our **AI Scoping & Architecture Discovery Sprint ($250)**.\n\nDuring this 2-day sprint, I will deliver:\n1. Complete Technical Requirements Document (TRD)\n2. Interactive System Architecture & Vector Pipeline Diagram\n3. AI Model & Database Evaluation Matrix\n4. Fixed-Price, Milestone-Based Implementation Roadmap\n\nOnce completed, the $250 discovery fee will be applied as a credit toward your full project implementation. Let me know if you would like me to send a custom offer for the discovery sprint!"
+    },
+    {
+      "id": "T04",
+      "name": "Custom Offer Scope Confirmation",
+      "trigger": "Custom Offer Issue",
+      "text": "Hi [Buyer Name],\n\nPer our discussion, I have created a custom offer for **[Project Title]**.\n\nINCLUDED SCOPE & DELIVERABLES:\n• [Deliverable 1]\n• [Deliverable 2]\n• [Deliverable 3]\n• [Deliverable 4]\n• 14 Days Post-Delivery Support & Bug Fixes\n\nEXCLUSIONS:\n• Third-party API token fees (billed directly to buyer)\n• Features outside the specified Technical Requirements Document\n\nDelivery Timeline: [X] Days | Revisions: [Y]\n\nPlease review the custom offer details below and accept to initiate our build sprint!"
+    },
+    {
+      "id": "T05",
+      "name": "Project Delivery & Handover",
+      "trigger": "Order Completion",
+      "text": "Hi [Buyer Name],\n\nI am pleased to deliver your completed **[Project Name]**!\n\nWHAT HAS BEEN DELIVERED:\n1. Source Code Repository: Fully documented Python/Next.js codebase attached as ZIP.\n2. Deployment Verification: Live working URL verified at [URL].\n3. Video Walkthrough: 5-minute video demonstration covering setup, usage, and admin features.\n4. Documentation: Complete Administrator & Deployment Guide included.\n\nNEXT STEPS:\nPlease review the deliverables and test the system. If everything meets your expectations, please accept the delivery. It has been a pleasure working on this enterprise AI project with you."
+    }
+  ]
+}

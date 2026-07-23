@@ -1,0 +1,69 @@
+name: fiverr_ai_optimizer
+version: 1.0.0
+description: "Audits, optimizes, and maintains Fiverr seller profiles, AI gig copy, SEO tags, pricing packages, and conversion funnels based on evidence-based marketplace guidelines."
+author: "Enterprise AI Growth Team"
+
+triggers:
+  - "Audit my Fiverr profile"
+  - "Optimize this Fiverr gig"
+  - "Diagnose low Fiverr impressions"
+  - "Refresh AI search tags"
+  - "Generate custom offer proposal"
+
+inputs:
+  required:
+    - name: task_type
+      type: string
+      enum: ["PROFILE_AUDIT", "GIG_OPTIMIZATION", "FUNNEL_DIAGNOSIS", "KEYWORD_REFRESH", "PROPOSAL_GENERATION"]
+    - name: seller_profile_text
+      type: string
+  optional:
+    - name: gig_data
+      type: object
+      properties:
+        title: string
+        category: string
+        tags: array
+        description: string
+        packages: object
+    - name: performance_metrics
+      type: object
+      properties:
+        success_score: number
+        impressions_30d: integer
+        clicks_30d: integer
+        inquiries_30d: integer
+        orders_30d: integer
+        conversion_rate: number
+
+workflow_steps:
+  - id: step_01_validate_inputs
+    action: "Validate incoming text payload and ensure mandatory fields exist."
+  - id: step_02_policy_check
+    action: "Scan copy for prohibited keywords (email, WhatsApp, pay outside, guarantee #1)."
+  - id: step_03_intent_classification
+    action: "Classify target buyer search intent (Transactional, Commercial, Technical, Enterprise)."
+  - id: step_04_positioning_audit
+    action: "Evaluate presence of 30+ yrs enterprise authority + hands-on engineering proof points."
+  - id: step_05_seo_keyword_density
+    action: "Analyze primary and long-tail keyword density; flag keyword stuffing (>3%)."
+  - id: step_06_conversion_diagnosis
+    action: "Identify conversion bottleneck (Impressions -> Clicks -> Messages -> Orders)."
+  - id: step_07_draft_copy
+    action: "Generate optimized copy variants adhering strictly to character caps."
+    character_caps:
+      headline: 70
+      gig_title: 80
+      gig_description: 4000
+      faq_question: 100
+      faq_answer: 300
+  - id: step_08_human_approval
+    action: "Present proposed changes, diff visualization, and rationale to human seller for approval."
+    require_human_confirmation: true
+
+guardrails:
+  prohibit_fabricated_credentials: true
+  prohibit_copied_content: true
+  prohibit_offplatform_contact: true
+  prohibit_ranking_guarantees: true
+  require_manual_publishing: true
