@@ -1,0 +1,61 @@
+{
+  "system_version": "2.0.0",
+  "project_catalog_count": 5,
+  "consultations_count": 2,
+  "project_catalog_items": [
+    {
+      "id": "CATALOG_01",
+      "title": "You will get an enterprise RAG chatbot and AI knowledge base",
+      "category": "AI Application Development",
+      "starter_price": 350,
+      "business_price": 1200,
+      "enterprise_price": 2800
+    },
+    {
+      "id": "CATALOG_02",
+      "title": "You will get autonomous AI agents and multi agent workflows",
+      "category": "AI Agent Development",
+      "starter_price": 500,
+      "business_price": 1800,
+      "enterprise_price": 4000
+    },
+    {
+      "id": "CATALOG_03",
+      "title": "You will get custom n8n and make AI workflow automations",
+      "category": "AI Workflow Automation",
+      "starter_price": 250,
+      "business_price": 750,
+      "enterprise_price": 1800
+    },
+    {
+      "id": "CATALOG_04",
+      "title": "You will get a custom AI SaaS MVP and full stack web application",
+      "category": "AI Web Development",
+      "starter_price": 600,
+      "business_price": 2200,
+      "enterprise_price": 5000
+    },
+    {
+      "id": "CATALOG_05",
+      "title": "You will get an enterprise AI architecture security and cost audit",
+      "category": "AI Consulting & Strategy",
+      "starter_price": 300,
+      "business_price": 900,
+      "enterprise_price": 2000
+    }
+  ],
+  "consultation_offers": [
+    {
+      "id": "CONSULT_01",
+      "name": "30-Minute AI Architecture & Strategy Sprint",
+      "duration_minutes": 30,
+      "price": 150
+    },
+    {
+      "id": "CONSULT_02",
+      "name": "60-Minute Enterprise AI Deep Scoping & Roadmap Call",
+      "duration_minutes": 60,
+      "price": 250
+    }
+  ]
+}

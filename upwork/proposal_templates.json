@@ -1,0 +1,28 @@
+{
+  "system_version": "2.0.0",
+  "proposal_templates_count": 15,
+  "compliance": "Upwork User Agreement 2025/2026",
+  "templates": [
+    {
+      "id": "PROP_01",
+      "name": "Enterprise RAG System & Document Chatbot Job",
+      "target_job": "RAG, Knowledge Base, Vector Search",
+      "hook_opening": "I can architect and deploy a zero-hallucination, secure RAG chatbot for your [document type / platform] using LangChain, Pinecone, and AWS security protocols.",
+      "template_text": "Hi [Client Name / Hiring Team],\n\nI can architect and deploy a zero-hallucination, secure RAG chatbot for your [document type / platform] using LangChain, Pinecone, and AWS security protocols.\n\nIn a recent enterprise build, I engineered a HIPAA-compliant RAG system indexing over 100,000 internal clinical PDFs using hybrid keyword + semantic reranking—achieving 99.4% accuracy with zero data leakage to public models.\n\nTECHNICAL ROADMAP FOR YOUR BUILD:\n1. Ingestion & Chunking: Automated parsing of your [data sources] using optimal token boundaries.\n2. Vector Indexing: High-performance semantic search using Pinecone / pgvector.\n3. Guardrails & Citation: System prompt guardrails requiring exact source attribution links.\n4. Production API: FastAPI backend + clean embeddable web widget.\n\nI've attached a 2-minute video walkthrough of a similar RAG knowledge platform I recently deployed. Would you be open to a quick 10-minute call to review your document ingestion scope?\n\nBest regards,\nAlex | Enterprise AI Architect"
+    },
+    {
+      "id": "PROP_02",
+      "name": "Autonomous AI Agent & Multi-Agent Swarm Job",
+      "target_job": "AI Agents, LangGraph, CrewAI",
+      "hook_opening": "Your requirement for an autonomous multi-agent workflow aligns perfectly with my recent work building stateful agent swarms using LangGraph and CrewAI.",
+      "template_text": "Hi [Client Name],\n\nYour requirement for an autonomous multi-agent workflow aligns perfectly with my recent work building stateful agent swarms using LangGraph and CrewAI.\n\nInstead of basic linear prompt chains, I engineer multi-agent systems with explicit role delegation, state persistence, and human-in-the-loop fallback checkpoints.\n\nHOW WE WILL STRUCTURE YOUR AGENT SWARM:\n• Agent 1 (Researcher): Ingests and parses incoming payload data from [APIs / Sources].\n• Agent 2 (Analyst): Processes data against your business logic and evaluates rules.\n• Agent 3 (Auditor): Runs security & compliance verification before finalizing output.\n\nYou receive 100% clean Python source code, complete Docker configuration, and an operational guide. Let's schedule a brief call to align on your workflow logic!"
+    },
+    {
+      "id": "PROP_03",
+      "name": "n8n / Make AI Workflow Automation Job",
+      "target_job": "n8n, Make.com, AI Workflow Automation",
+      "hook_opening": "I can streamline your operational workflow by building a custom, fail-safe n8n automation pipeline connecting [App 1] with [App 2] and [App 3].",
+      "template_text": "Hi [Client Name],\n\nI can streamline your operational workflow by building a custom, fail-safe n8n automation pipeline connecting [App 1, e.g., HubSpot] with [App 2, e.g., OpenAI API] and [App 3, e.g., Slack].\n\nI specialize in building self-healing n8n pipelines equipped with automated error-handling, rate-limit management, and instant notifications if an external API fails.\n\nWHAT YOU GET:\n• Fully configured n8n workflow (self-hosted or n8n cloud).\n• Custom JavaScript / Python nodes for advanced data transformations.\n• 5-minute video walkthrough explaining workflow management.\n\nLet me know a good time to connect on Upwork Messages!"
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+name: upwork_ai_optimizer
+version: 1.0.0
+description: "Audits Upwork profiles, analyzes client job posts, generates high-converting proposals, calculates Connects ROI, and manages contract delivery workflows."
+author: "Enterprise AI Growth Team"
+
+triggers:
+  - "Draft Upwork proposal"
+  - "Audit Upwork profile"
+  - "Calculate Connects ROI"
+  - "Optimize Project Catalog item"
+  - "Diagnose low interview rate"
+
+inputs:
+  required:
+    - name: task_type
+      type: string
+      enum: ["PROPOSAL_GENERATION", "PROFILE_AUDIT", "CONNECTS_ROI_CHECK", "CATALOG_OPTIMIZATION", "JSS_DIAGNOSIS"]
+    - name: job_post_text
+      type: string
+  optional:
+    - name: client_metrics
+      type: object
+      properties:
+        payment_verified: boolean
+        rating: number
+        total_spent: number
+        hire_rate: number
+    - name: freelancer_profile
+      type: object
+
+workflow_steps:
+  - id: step_01_parse_job
+    action: "Extract technical stack, core problem, and screening questions from job post."
+  - id: step_02_policy_check
+    action: "Scan draft proposal to ensure ZERO pre-contract external contact info is included."
+  - id: step_03_draft_hook
+    action: "Generate high-converting 3-line opening hook addressing client's exact problem."
+  - id: step_04_connects_roi
+    action: "Calculate proposal fit score and recommend whether to boost into Top 3 slots."
+  - id: step_05_human_approval
+    action: "Present tailored proposal draft to human seller for manual review and submission."
+    require_human_confirmation: true
+
+guardrails:
+  prohibit_precontract_contact_info: true
+  prohibit_autobidding_without_approval: true
+  prohibit_unverified_client_spam: true
+  enforce_upwork_zoom_only: true
