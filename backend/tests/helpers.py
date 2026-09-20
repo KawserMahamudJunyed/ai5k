@@ -27,3 +27,14 @@ async def activated_user_token(client, email: str, full_name: str) -> str:
     login_resp = await login(client, email=email)
     assert login_resp.status_code == 200, login_resp.text
     return login_resp.json()["access_token"]
+
+
+async def create_org(client, token: str, name: str, **overrides) -> dict:
+    """Create an organization and return its JSON (caller authenticated by token)."""
+    body = {"name": name}
+    body.update(overrides)
+    resp = await client.post(
+        "/api/v1/organizations", headers={"Authorization": f"Bearer {token}"}, json=body
+    )
+    assert resp.status_code == 201, resp.text
+    return resp.json()

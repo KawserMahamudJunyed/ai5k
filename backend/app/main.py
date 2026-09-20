@@ -5,7 +5,17 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.v1 import admin, audit_logs, auth, organizations, roles
+from app.api.v1 import (
+    admin,
+    audit_logs,
+    auth,
+    evidence,
+    organizations,
+    profiles,
+    roles,
+    skills,
+    verification,
+)
 from app.core.config import get_settings
 from app.core.errors import register_exception_handlers
 from app.core.logging import register_middleware, setup_logging
@@ -44,6 +54,12 @@ api_v1 = "/api/v1"
 app.include_router(auth.router, prefix=api_v1)
 app.include_router(roles.router, prefix=api_v1)
 app.include_router(organizations.router, prefix=api_v1)
+app.include_router(profiles.router, prefix=api_v1)
+app.include_router(profiles.services_router, prefix=api_v1)
+app.include_router(skills.router, prefix=api_v1)
+app.include_router(skills.claims_router, prefix=api_v1)
+app.include_router(evidence.router, prefix=api_v1)
+app.include_router(verification.router, prefix=api_v1)
 app.include_router(admin.router, prefix=api_v1)
 app.include_router(audit_logs.router, prefix=api_v1)
 

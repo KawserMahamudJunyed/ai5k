@@ -34,6 +34,8 @@ class Settings(BaseSettings):
 
     # --- Other services (used by later tasks) ---
     s3_evidence_bucket: str = ""
+    evidence_upload_ttl_seconds: int = 900
+    evidence_download_ttl_seconds: int = 300
     opensearch_endpoint: str = ""
     llm_provider_base_url: str = ""
 

@@ -187,6 +187,16 @@ async def revoke_role(
     await db.commit()
 
 
+async def has_role(db: AsyncSession, user_id: uuid.UUID, role_name: str) -> bool:
+    """True if the user holds the named role (any scope — platform-wide or org-scoped)."""
+    result = await db.execute(
+        select(Role.id)
+        .join(UserRole, UserRole.role_id == Role.id)
+        .where(UserRole.user_id == user_id, Role.name == role_name)
+    )
+    return result.scalar_one_or_none() is not None
+
+
 async def has_permission(
     db: AsyncSession,
     user_id: uuid.UUID,
