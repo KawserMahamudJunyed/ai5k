@@ -59,30 +59,47 @@ backend/
 │   │   └── logging.py            # JSON formatter + request correlation-id middleware
 │   ├── api/v1/                   # HTTP layer — thin routers, one module per resource
 │   │   ├── auth.py               #   /auth  (signup, verify-email, login, refresh, me)
-│   │   ├── organizations.py      #   /organizations
+│   │   ├── organizations.py      #   /organizations (+ members, consent, aggregate skills, PATCH)
+│   │   ├── profiles.py           #   /profiles (+ nested /profiles/{id}/services)
+│   │   ├── skills.py             #   /skills catalog + /profiles/{id}/skills claims
+│   │   ├── evidence.py           #   /profiles/{id}/evidence (presign, rows, skill links)
+│   │   ├── verification.py       #   /verification-requests (admin queue: approve/reject)
 │   │   ├── roles.py              #   /roles
 │   │   ├── admin.py              #   /admin/users/{id}/roles
 │   │   └── audit_logs.py         #   /audit-logs
 │   ├── services/                 # Business logic — one module per domain
 │   │   ├── auth.py               # signup/login/verify/refresh + Cognito sync
-│   │   ├── organization.py       # org creation + creator onboarding as org_admin
-│   │   ├── rbac.py               # roles, permissions, grant/revoke, has_permission
+│   │   ├── organization.py       # org creation, PATCH, member mgmt, consent, aggregate skills
+│   │   ├── profiles.py           # profile/skill-claim/service logic + permission checks
+│   │   ├── evidence.py           # evidence rows, skill-claim links, permission checks
+│   │   ├── verification.py       # verification queue: request, list, decide + target side effects
+│   │   ├── storage.py            # S3 presigned PUT/GET (no file proxying); None when unconfigured
+│   │   ├── rbac.py               # roles, permissions, grant/revoke, has_permission, has_role
 │   │   └── audit.py              # write_audit_log (append-only)
 │   ├── models/                   # SQLAlchemy ORM models
 │   │   ├── base.py               # DeclarativeBase, UUID/Timestamp mixins, JSONB variant
 │   │   ├── identity.py           # users, organizations, organization_members, roles, permissions, role_permissions, user_roles
+│   │   ├── profile.py            # profiles, skills, profile_skills, services
+│   │   ├── evidence.py           # evidence, evidence_skill_links
+│   │   ├── verification.py       # verification_requests
 │   │   └── audit.py              # audit_logs
 │   └── schemas/                  # Pydantic request/response models
-│       └── auth.py               # (auth, org, role, admin, audit-log schemas)
+│       ├── auth.py               # (auth, org, role, admin, audit-log schemas)
+│       ├── profile.py            # (profile, skill claim, service schemas)
+│       ├── organization.py       # (member, invitation, aggregate skill, org update schemas)
+│       ├── evidence.py           # (evidence, presign, skill-link schemas)
+│       └── verification.py       # (verification request, queue, decide schemas)
 ├── alembic/                      # Migrations (see §7)
 │   ├── env.py                    # Async env wired to app's DATABASE_URL
-│   └── versions/                 # 0001_add_identity_rbac_audit_tables.py
+│   └── versions/                 # 0001 (identity/rbac/audit), 0002 (profiles/skills/services), 0003 (evidence), 0004 (verification_requests)
 ├── scripts/
-│   └── seed_roles_permissions.py # Idempotent RBAC seed
+│   ├── seed_roles_permissions.py # Idempotent RBAC seed
+│   ├── dogfood.py                # End-to-end endpoint smoke test over real HTTP (self-contained)
+│   └── cleanup_dogfood.py        # Remove dogfood rows from the dev DB (dry run by default)
 ├── tests/                        # pytest suite (SQLite in-memory, see §15)
 │   ├── conftest.py               # app + DB fixtures
-│   ├── helpers.py                # signup/verify/login helpers
-│   └── test_*.py                 # auth flow, orgs, rbac, cognito sync, audit
+│   ├── helpers.py                # signup/verify/login/create_org helpers
+│   └── test_*.py                 # auth flow, orgs, members, profiles, skills, services, rbac, cognito sync, audit
 ├── docs/                         # All documentation (see §16)
 ├── docker-compose.yml            # Local PostgreSQL 16
 ├── alembic.ini
@@ -153,7 +170,9 @@ environment variables and a `.env` file at the backend root. **`.env` is never c
 | `COGNITO_REGION` | `us-east-1` | AWS region for the pool |
 | `COGNITO_JWKS_CACHE_TTL_SECONDS` | `3600` | How long Cognito public keys are cached |
 | `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | *(empty)* | Local dev only — staging/prod use IAM roles |
-| `S3_EVIDENCE_BUCKET` | *(empty)* | Evidence file uploads (later task) |
+| `S3_EVIDENCE_BUCKET` | *(empty)* | Evidence file uploads (presigned S3). Empty → file-type evidence returns 503; links/testimonials still work |
+| `EVIDENCE_UPLOAD_TTL_SECONDS` | `900` | Presigned upload URL lifetime (15 min) |
+| `EVIDENCE_DOWNLOAD_TTL_SECONDS` | `300` | Presigned download URL lifetime (5 min) |
 | `OPENSEARCH_ENDPOINT` | *(empty)* | Search (later task) |
 | `LLM_PROVIDER_BASE_URL` | *(empty)* | LLM provider layer (later task) |
 | `CORS_ORIGINS` | `["*"]` | JSON list of allowed origins for CORS |
@@ -238,6 +257,13 @@ is `JSONB` on Postgres and `JSON` on SQLite (tests).
 | `permissions` | Fine-grained permission codes | `Permission` |
 | `role_permissions` | Role → permission mapping | `RolePermission` |
 | `user_roles` | User → role (optionally org-scoped) | `UserRole` |
+| `profiles` | Marketplace-facing "party" entity (ADR 0001); exactly one owner | `Profile` |
+| `skills` | Flat taxonomy (name + category) | `Skill` |
+| `profile_skills` | Skill claims (`claim_type` server-asserted to `self_declared`) | `ProfileSkill` |
+| `services` | Rates & availability per profile | `Service` |
+| `evidence` | Uploads/links with `source_type`; `verification_status` server-managed | `Evidence` |
+| `evidence_skill_links` | Which evidence backs which skill claim | `EvidenceSkillLink` |
+| `verification_requests` | Admin queue (identity docs & skill claims); polymorphic target | `VerificationRequest` |
 | `audit_logs` | Append-only audit trail (see §12) | `AuditLog` |
 
 Full column-by-column detail: `docs/data-dictionary.md`; relationships: `docs/erd.md`.
@@ -443,6 +469,73 @@ Response: `[AuditLogRead, …]`:
 
 Auth: none · Status: **200** → `{ "status": "ok" }`
 
+### 9.14 Profiles, skills & services *(added 2026-09-20 — Task 2.1/2.2 workstreams)*
+
+Full request/response shapes live in the auto-generated OpenAPI (`/docs`); flows and permission
+rules below. Spec: `docs/specs/2026-09-19-profile-crud-org-members-design.md`.
+
+| Endpoint | Auth / permission | Notes |
+|---|---|---|
+| `POST /profiles` | Bearer | Individual profile for self (409 `profile_exists` on second). With `organization_id` in the body: requires that org's `organization:manage` (409 if the org already has one) |
+| `GET /profiles/me` | Bearer | Caller's individual profile; 404 `profile_not_found` before creation |
+| `GET /profiles/{id}` | Bearer | Public profiles → any authed user; private → owner, org members (org profiles), org admin, `platform_admin` |
+| `PATCH /profiles/{id}` | Bearer + manage rights | `display_name`, `headline`, `job_roles` (≤10), `portfolio_links` (≤20, `https?://` URLs), `visibility`. Owner FKs immutable |
+| `GET /skills?category=&page=&page_size=` | Bearer | Flat catalog, offset pagination, `{data, total, page, page_size}` |
+| `POST /profiles/{id}/skills` | Bearer + manage rights | Body `{skill_id}` or `{skill_name, category}` (create-or-get, name normalized lowercase). **`claim_type` is always server-set to `self_declared`** — client-sent values are ignored; only the verification queue (Task 2.4/2.5) flips to `evidenced`. 409 `skill_already_claimed` |
+| `PATCH /profiles/{id}/skills/{claim_id}` | Bearer + manage rights | `proficiency_level` only |
+| `DELETE /profiles/{id}/skills/{claim_id}` | Bearer + manage rights | 204 |
+| `POST /profiles/{id}/services` | Bearer + manage rights | `rate_type` `hourly\|fixed\|retainer`, `rate_amount` > 0, `availability_status` defaults `available` |
+| `GET /profiles/{id}/services` | Bearer + view rights | List for a profile |
+| `PATCH /profiles/{id}/services/{service_id}` | Bearer + manage rights | Partial; typical use is flipping `availability_status` |
+| `DELETE /profiles/{id}/services/{service_id}` | Bearer + manage rights | 204 |
+
+### 9.15 Organizations: PATCH, members, consent, aggregated skills *(added 2026-09-20 — Task 2.2)*
+| Endpoint | Auth / permission | Notes |
+|---|---|---|
+| `PATCH /organizations/{org_id}` | That org's `org_admin` or `platform_admin` | `name`, `description`, `website_url`, `logo_url`. **`slug` is immutable** (public URL) |
+| `GET /organizations/{org_id}/members` | Same | id, user (id/email/full_name), status, `consent_given`, `joined_at` |
+| `POST /organizations/{org_id}/members` | Same | Body `{email}` — **existing users only** (404 `user_not_found`; no email infra in the backend). Row starts `invited`/`consent_given=false`. 409 `member_exists` if invited/active; re-inviting a `removed` member resets to a fresh invitation |
+| `GET /organizations/invitations` | Bearer (any user) | Caller's pending invitations (`invited_at` is null while pending — the schema sets `joined_at` only on consent) |
+| `POST /organizations/{org_id}/members/me/consent` | The invited member | Flips `consent_given=true`, `invited→active`, sets `joined_at`, **grants an org-scoped `professional` role** (not `org_admin` — elevation is a `platform_admin` action via §9.10). 409 `not_pending` if already active |
+| `DELETE /organizations/{org_id}/members/{member_id}` | That org's `org_admin` or `platform_admin` | `status→removed`, revokes the member's org-scoped roles (platform-wide roles untouched). **409 `cannot_remove_self`** (last-admin lockout guard) |
+| `GET /organizations/{org_id}/skills` | Active members, that org's `org_admin`, `platform_admin` | Aggregated skill view over **consenting active members'** individual profiles. Per skill: `member_count` (distinct users — no double counting), `evidenced_count`, `self_declared_count`. Sorted `member_count` desc, then name. Claims made before consent are not counted |
+
+### 9.16 Evidence: uploads, source-type tagging, skill-claim links *(added 2026-09-20 — Task 2.3 precursor)*
+
+Spec: `docs/specs/2026-09-20-evidence-uploads-design.md`. All routes live under
+`/profiles/{profile_id}/evidence`; writes need manage rights on the profile, reads follow the
+profile's visibility. The backend **never proxies file bytes**: it issues presigned S3 PUTs, the
+frontend uploads directly, and the `s3://{bucket}/{key}` URL is stored on the row.
+
+| Endpoint | Notes |
+|---|---|
+| `POST …/evidence/presign` | Body `{source_type, content_type}` (file types only; content types: `application/pdf`, `image/png`, `image/jpeg`, `image/webp`) → `{file_key, upload_url, expires_in}`. **503 `storage_not_configured`** when `S3_EVIDENCE_BUCKET` is unset |
+| `POST …/evidence` | File types: `{source_type, title, file_key}` (key must be one this profile was issued — prefix + traversal guard, 422 otherwise). `link`/`testimonial`: `{source_type, title, url}` (https?://). Rows start `verification_status: pending` — **never client-settable** |
+| `GET …/evidence`, `GET …/evidence/{id}` | List/detail; file rows include a short-TTL presigned `download_url` when storage is configured |
+| `DELETE …/evidence/{id}` | Removes the row only — the S3 object stays (URLs expire; orphan reaping later) |
+| `POST …/evidence/{id}/skill-links` | `{profile_skill_id}`; the claim must belong to the **same profile** (404 otherwise), 409 on duplicate |
+| `GET …/evidence/{id}/skill-links` | List links |
+| `DELETE …/evidence/{id}/skill-links/{link_id}` | Unlink (204) |
+
+Known limitation: presigned PUT can't enforce max file size — revisit via presigned POST policies
+or gateway limits if abuse shows up.
+
+### 9.17 Verification queue *(added 2026-09-20 — Tasks 2.4/2.5)*
+
+Spec: `docs/specs/2026-09-20-verification-queue-design.md`. Admin review of identity docs
+(evidence rows) and skill claims. Permission split per §11: **listing the queue needs
+`verification:review`; deciding needs `verification:approve`** (platform_admin holds both).
+Request creation requires manage rights on the target's profile.
+
+| Endpoint | Notes |
+|---|---|
+| `POST /verification-requests` | Body `{target_type, target_id}` — `profile_skill` \| `identity_doc`. 409 `request_exists` (pending dup), 409 `already_verified` (target already verified/evidenced); rejected targets may be resubmitted |
+| `GET /verification-requests?status=&page=&page_size=` | The queue; default `status=pending`, `all` allowed; `{data, total, page, page_size}` envelope, newest first |
+| `POST /verification-requests/{id}/approve` | Decision-once (409 `already_decided` on re-decide). **Side effects:** claim → `claim_type=evidenced` (the only path); identity doc → `verification_status=verified`. Optional `{note}` → audit metadata |
+| `POST /verification-requests/{id}/reject` | Side effect: evidence → `verification_status=rejected`; claims stay `self_declared` (editable/resubmittable) |
+
+Approving a claim automatically feeds the org aggregate's `evidenced_count` (§9.15).
+
 ---
 
 ## 10. API conventions
@@ -495,7 +588,15 @@ ordering rules). Current actions:
 | `user.email_verified` | Email verification (first time) |
 | `auth.login` | Successful local login |
 | `organization.created` | Org creation |
-| `user_role.granted` / `user_role.revoked` | Role assignment changes |
+| `organization.updated` | Org profile PATCH (before/after metadata) |
+| `organization_member.updated` | Member invited / consent accepted / removed (before/after metadata) |
+| `user_role.granted` / `user_role.revoked` | Role assignment changes (incl. org-scoped professional granted on consent, revoked on removal) |
+| `profile.created` / `profile.updated` | Profile create/PATCH (before/after metadata) |
+| `profile_skill.created` / `profile_skill.updated` / `profile_skill.deleted` | Skill-claim lifecycle |
+| `service.created` / `service.updated` / `service.deleted` | Service lifecycle (before/after metadata) |
+| `evidence.created` / `evidence.deleted` | Evidence row lifecycle |
+| `evidence_skill_link.created` / `evidence_skill_link.deleted` | Evidence ↔ skill-claim links |
+| `verification_request.approved` / `verification_request.rejected` | Verification queue decisions (metadata: target, reviewer, note) |
 
 Conventions: `docs/audit-logging.md`.
 
@@ -554,7 +655,14 @@ How it works (see `tests/conftest.py`):
 - `Base.metadata.create_all` runs per test; roles/permissions are seeded for each test (autouse fixture in `conftest.py`).
 - `tests/helpers.py` provides `signup` / `verify_email` / `login` / `activated_user_token`
   helpers for auth-flow tests.
-- Existing suites: auth flow, organizations, RBAC, Cognito sync, audit.
+- Existing suites: auth flow, organizations, org members/consent/aggregation, profiles, skill claims, services, RBAC, Cognito sync, audit.
+
+Two self-contained scripts exercise the stack against a real database (not part of pytest):
+
+```bash
+python scripts/dogfood.py          # boots the app on a free port, runs ~46 endpoint checks, prints PASS/FAIL transcript
+python scripts/cleanup_dogfood.py  # counts the `df-*` rows it leaves (dry run); add --apply to delete
+```
 
 ---
 
@@ -575,6 +683,7 @@ How it works (see `tests/conftest.py`):
 | `docs/data-dictionary.md` | Every table/column |
 | `docs/erd.md` | ER diagram + narrative |
 | `docs/migrations.md` | Alembic conventions |
+| `docs/specs/` | Approved feature designs (e.g. profile CRUD + org members) |
 | `docs/glossary.md` | Domain terms |
 | `docs/decisions/` | ADRs (schema/architecture decisions) |
 

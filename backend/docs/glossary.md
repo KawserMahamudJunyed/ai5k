@@ -13,16 +13,56 @@ one user behind it, but not every user necessarily has a profile yet (e.g. right
 before they've filled anything in).
 
 **Organization** — a company/team account. Has members (`organization_members`) and, like a user,
-can have its own profile.
+can have its own profile. The creator becomes that org's `org_admin`; a member who accepts an
+invite gets an org-scoped `professional` role.
+
+**Headline** — a one-line professional summary on a profile (`profiles.headline`). Pilot
+addition alongside `job_roles` and `portfolio_links`.
+
+**Job roles** — the professional titles a profile lists, e.g. `["Backend Engineer", "Data
+Analyst"]` (jsonb column on `profiles`, ≤10). Not RBAC roles — see **RBAC scope** for those.
+
+**Portfolio link** — a `{label, url}` entry (jsonb on `profiles`, ≤20) pointing at work the
+profile owner wants to showcase.
+
+**Service** (`services`) — a sellable offering attached to a profile: title, description,
+`rate_type` (`hourly`/`fixed`/`retainer`), `rate_amount`, and `availability_status`
+(`available`/`booked`/`unavailable`).
 
 **Skill claim** (`profile_skills`) — a specific skill a profile says it has. Can be
-self-declared or evidenced.
+self-declared or evidenced; unique per (profile, skill). Claims are always created
+`self_declared` — the server ignores any client-sent `claim_type`.
+
+**Aggregated skill view** — per-org rollup of consenting active members' individual skill
+claims (`GET /organizations/{id}/skills`). `member_count` is the number of **distinct users**
+claiming the skill, so a member counts once regardless of claims; members who haven't given
+consent (or were removed) are never counted.
+
+**Consent** (`organization_members.consent_given`) — the member's opt-in that allows their
+individual skills to be counted in the org's aggregated skill view. Accepting an invitation
+flips `invited → active`, sets `joined_at`, and grants the org-scoped `professional` role.
 
 **Evidence** — a document, screenshot, certificate, or link uploaded to back up a skill claim or
-an identity verification.
+an identity verification. File types go to S3 via presigned PUT URLs (the backend never touches
+the bytes); `link`/`testimonial` evidence is just a URL. Every row starts
+`verification_status: pending` — server-managed, never client-set.
+
+**Source type** (`evidence.source_type`) — the tag saying what kind of evidence a row holds:
+`document`, `screenshot`, `certificate` (file types, S3 required), `link`, or `testimonial`
+(URL-only, no storage needed).
+
+**Evidence–skill link** (`evidence_skill_links`) — which evidence backs which skill claim. The
+claim must live on the same profile as the evidence.
 
 **Verification** — the admin review process that moves a skill claim or identity doc from
-"self-declared" to "verified," or approves/rejects it.
+"self-declared" to "verified," or approves/rejects it. The only path by which a skill claim's
+`claim_type` becomes `evidenced`. Implemented as the `verification_requests` queue: owners file
+requests, admins with `verification:approve` decide once, and the outcome also lands on the
+request's target row (claim → `evidenced`; evidence → `verified`/`rejected`).
+
+**Verification request** (`verification_requests`) — one queue item: who filed it (`requestor_id`),
+what's being reviewed (`target_type` + `target_id`, a soft polymorphic reference), and the
+decision (`status`, `reviewed_by`, `reviewed_at`).
 
 **Opportunity** — an inbound piece of work (a "lead" in traditional CRM terms) — could come from a
 buyer's public intake form, manual entry, or automated email import.
@@ -44,4 +84,5 @@ testimonial" (a pre-platform reference) by `review_type`.
 **Audit log** — the append-only record of sensitive state-changing actions across the platform.
 
 **RBAC scope** — whether a role applies platform-wide or is limited to a single organization. See
-`rbac.md`.
+`rbac.md`. The verification queue splits into `verification:review` (see the queue) and
+`verification:approve` (decide); `platform_admin` holds both.

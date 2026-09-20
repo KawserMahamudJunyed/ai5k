@@ -82,17 +82,32 @@ All `id` columns are `uuid`, generated server-side (`gen_random_uuid()` or app-s
 
 ## Profiles, Skills & Evidence
 
+> **Status (2026-09-20):** `profiles`, `skills`, `profile_skills`, `services` are implemented in
+> migration `0002_add_profiles_skills_services`; `evidence`, `evidence_skill_links` in
+> `0003_add_evidence_tables`; `verification_requests` in `0004_add_verification_requests`. Two
+> deviations from the original dictionary are flagged below and await schema-freeze sign-off (see
+> `specs/2026-09-19-profile-crud-org-members-design.md`). Evidence upload flow:
+> `specs/2026-09-20-evidence-uploads-design.md`; verification queue:
+> `specs/2026-09-20-verification-queue-design.md`.
+
 ### `profiles`
 | Column | Type | Notes |
 |---|---|---|
 | id | uuid pk | |
 | owner_type | varchar | `individual` or `organization` |
-| user_id | uuid, fk → users.id, nullable | set when owner_type = individual |
-| organization_id | uuid, fk → organizations.id, nullable | set when owner_type = organization |
-| display_name | varchar | |
-| visibility | varchar | proposed: `public`, `private`, `unverified` |
+| user_id | uuid, fk → users.id, nullable, **unique** | set when owner_type = individual |
+| organization_id | uuid, fk → organizations.id, nullable, **unique** | set when owner_type = organization |
+| display_name | varchar(255) | |
+| headline | varchar(255), nullable | **pilot addition** — one-line professional summary |
+| job_roles | jsonb (list of str, ≤10), default `[]` | **pilot addition** — professional titles, e.g. `["Backend Engineer"]` |
+| portfolio_links | jsonb (list of {label, url}, ≤20), default `[]` | **pilot addition** — url must match `https?://` |
+| visibility | varchar | implemented: `private` (default), `public`; `unverified` reserved for the verification flow |
 | created_at | timestamptz | |
 | updated_at | timestamptz | |
+
+Party pattern (ADR 0001): a CHECK constraint enforces exactly one of `user_id` / `organization_id`.
+The unique constraints give at most one profile per user / per organization. Owner FKs and
+`owner_type` are immutable after creation.
 
 ### `profile_scores`
 | Column | Type | Notes |
@@ -107,38 +122,46 @@ All `id` columns are `uuid`, generated server-side (`gen_random_uuid()` or app-s
 | Column | Type | Notes |
 |---|---|---|
 | id | uuid pk | |
-| name | varchar, unique | |
-| category | varchar | flat grouping, no hierarchy in v1 |
+| name | varchar(128), unique | stored lowercase — application-layer normalization |
+| category | varchar(128), nullable | flat grouping, no hierarchy in v1 |
 
 ### `profile_skills`
 | Column | Type | Notes |
 |---|---|---|
 | id | uuid pk | |
-| profile_id | uuid, fk → profiles.id | |
-| skill_id | uuid, fk → skills.id | |
-| claim_type | varchar | `self_declared`, `evidenced` |
+| profile_id | uuid, fk → profiles.id | unique together with skill_id |
+| skill_id | uuid, fk → skills.id | unique together with profile_id |
+| claim_type | varchar | `self_declared`, `evidenced` — **server-asserted**: claims are always created `self_declared`; only the verification queue may flip to `evidenced` |
 | proficiency_level | varchar | proposed: `beginner`, `intermediate`, `advanced`, `expert` |
 | created_at | timestamptz | |
 
 ### `evidence`
+> **Implemented (0003).** File uploads use presigned S3 PUTs — the backend never proxies file
+> bytes. `file_url` stores `s3://{bucket}/{key}` for file types and the plain https?:// URL for
+> `link`/`testimonial`. `verification_status` is **server-managed**: rows start `pending`; only
+> the verification queue (Tasks 2.4/2.5) moves them to `verified`/`rejected`.
+
 | Column | Type | Notes |
 |---|---|---|
 | id | uuid pk | |
 | profile_id | uuid, fk → profiles.id | |
 | uploader_id | uuid, fk → users.id | who performed the upload action |
-| source_type | varchar | proposed: `document`, `screenshot`, `certificate`, `link`, `testimonial` |
-| file_url | varchar | S3 URL, nullable if source_type = link |
-| title | varchar | |
+| source_type | varchar | implemented: `document`, `screenshot`, `certificate` (file types; S3 required), `link`, `testimonial` (URL-only, no storage needed) |
+| file_url | varchar(2048) | file types: `s3://{bucket}/{key}`; link/testimonial: the public URL |
+| title | varchar(255) | |
 | description | text | nullable |
-| verification_status | varchar | `pending`, `verified`, `rejected` |
+| verification_status | varchar | `pending` (default), `verified`, `rejected` — server-managed |
 | uploaded_at | timestamptz | |
 
 ### `evidence_skill_links`
+> **Implemented (0003).** A skill claim can only be linked to evidence on the **same profile**
+> (application-layer guard). Unique (evidence_id, profile_skill_id).
+
 | Column | Type | Notes |
 |---|---|---|
 | id | uuid pk | |
-| evidence_id | uuid, fk → evidence.id | |
-| profile_skill_id | uuid, fk → profile_skills.id | |
+| evidence_id | uuid, fk → evidence.id | unique together with profile_skill_id |
+| profile_skill_id | uuid, fk → profile_skills.id | unique together with evidence_id |
 
 ---
 
@@ -149,12 +172,13 @@ All `id` columns are `uuid`, generated server-side (`gen_random_uuid()` or app-s
 |---|---|---|
 | id | uuid pk | |
 | profile_id | uuid, fk → profiles.id | |
-| title | varchar | |
+| title | varchar(255) | |
 | description | text | |
 | rate_type | varchar | proposed: `hourly`, `fixed`, `retainer` |
-| rate_amount | numeric | |
-| availability_status | varchar | proposed: `available`, `booked`, `unavailable` |
+| rate_amount | numeric(12,2) | > 0, application-layer validation |
+| availability_status | varchar | proposed: `available` (default), `booked`, `unavailable` |
 | created_at | timestamptz | |
+| updated_at | timestamptz | **deviation** — not in the original dictionary; added for TimestampMixin consistency |
 
 ### `opportunities`
 | Column | Type | Notes |
@@ -270,14 +294,20 @@ All `id` columns are `uuid`, generated server-side (`gen_random_uuid()` or app-s
 ## Verification, Audit & Rules
 
 ### `verification_requests`
+> **Implemented (0004).** Admin queue for identity docs & skill claims
+> (`specs/2026-09-20-verification-queue-design.md`). In-scope `target_type` values:
+> `profile_skill`, `identity_doc` (`organization` reserved, not implemented).
+> **Decision-once:** approve/reject also lands on the target row in the same transaction —
+> approving a claim flips it to `evidenced`; identity-doc evidence goes `verified`/`rejected`.
+
 | Column | Type | Notes |
 |---|---|---|
 | id | uuid pk | |
-| requestor_id | uuid, fk → users.id | |
-| target_type | varchar | e.g. `profile_skill`, `identity_doc`, `organization` |
-| target_id | uuid | soft reference, not FK-enforced |
-| status | varchar | `pending`, `approved`, `rejected` |
-| reviewed_by | uuid, fk → users.id, nullable | |
+| requestor_id | uuid, fk → users.id | the target's owner |
+| target_type | varchar | implemented: `profile_skill`, `identity_doc`; `organization` reserved — app-layer validated, no CHECK (erd.md open item) |
+| target_id | uuid | soft reference, not FK-enforced (intentional) |
+| status | varchar | `pending` (default), `approved`, `rejected` |
+| reviewed_by | uuid, fk → users.id, nullable | deciding admin |
 | reviewed_at | timestamptz | nullable |
 | created_at | timestamptz | |
 
