@@ -1,24 +1,62 @@
-# Python
+# ---- Secrets ----
+.env
+.env.*
+!.env.example
+!.env.sample
+*.pem
+*.key
+
+# ---- Python ----
 __pycache__/
 *.py[cod]
 *.egg-info/
 .venv/
 venv/
+env/
 
-# Testing / tooling caches
+# ---- Testing / tooling caches ----
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
 .coverage
 htmlcov/
 
-# Environment / secrets
-.env
-.env.local
-*.env
-!.env.example
+# ---- Node / Next.js ----
+node_modules/
+.next/
+out/
+build/
+dist/
+*.tsbuildinfo
+.npm/
+.pnpm-store/
 
-# IDE / OS
+# ---- Databases & local data ----
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+.freebuff/
+ai-backend/data/
+backend/var/
+
+# ---- Logs & temp ----
+*.log
+npm-debug.log*
+yarn-error.log*
+*.bak
+*.tmp
+tmp/
+
+# ---- Editor / OS ----
+.DS_Store
+.DS_Store?
+Thumbs.db
 .idea/
 .vscode/
-.DS_Store
+*.swp
+
+# ---- Local agent config ----
+.claude/
+_git-history-backup/
