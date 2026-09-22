@@ -12,6 +12,7 @@ import AppShell from "@/components/layout/AppShell";
 import { ApiError } from "@/lib/api";
 import {
   addSkillClaim,
+  createVerificationRequest,
   deleteSkillClaim,
   getMyProfile,
   listSkillClaims,
@@ -33,6 +34,11 @@ function SkillsEditor() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  // Claims this session has filed a verification request for (server has no
+  // "list my requests" endpoint, so this is best-effort UI feedback).
+  const [requestedIds, setRequestedIds] = useState<Set<string>>(new Set());
+  const [verifyingId, setVerifyingId] = useState<string | null>(null);
+  const [notice, setNotice] = useState("");
   const boxRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -123,6 +129,32 @@ function SkillsEditor() {
     }
   };
 
+  // Get-verified CTA (REVIEW.md 3.3): files a request against the skill claim;
+  // an admin approval flips claim_type to evidenced.
+  const handleVerifyClaim = async (claim: SkillClaim) => {
+    if (!profile) return;
+    setError("");
+    setNotice("");
+    setVerifyingId(claim.id);
+    try {
+      await createVerificationRequest("profile_skill", claim.id);
+      setRequestedIds((ids) => new Set(ids).add(claim.id));
+      setNotice(`Verification requested for “${claim.skill_name}” — an admin will review it.`);
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 409 && err.code === "request_exists") {
+        setRequestedIds((ids) => new Set(ids).add(claim.id));
+        setNotice(`A verification request is already pending for “${claim.skill_name}”.`);
+      } else if (err instanceof ApiError && err.status === 409 && err.code === "already_verified") {
+        setNotice(`“${claim.skill_name}” is already evidenced.`);
+        await refreshClaims(profile.id);
+      } else {
+        setError(describe(err));
+      }
+    } finally {
+      setVerifyingId(null);
+    }
+  };
+
   if (error === "no-profile") {
     return (
       <main className="flex min-h-screen items-center justify-center p-6">
@@ -152,6 +184,12 @@ function SkillsEditor() {
         {error && error !== "no-profile" && (
           <div className="mb-6 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
             {error}
+          </div>
+        )}
+
+        {notice && (
+          <div className="mb-6 p-3 rounded-lg bg-brand-violet/10 border border-brand-violet/20 text-brand-violet text-sm">
+            {notice}
           </div>
         )}
 
@@ -226,6 +264,21 @@ function SkillsEditor() {
                       : "Self-declared — verify it with evidence to raise trust"}
                   </p>
                 </div>
+                {claim.claim_type !== "evidenced" && !requestedIds.has(claim.id) && (
+                  <button
+                    type="button"
+                    onClick={() => handleVerifyClaim(claim)}
+                    disabled={verifyingId === claim.id}
+                    className="text-xs font-semibold px-3 py-1.5 rounded bg-brand-violet/20 text-brand-violet hover:bg-brand-violet/30 transition-colors disabled:opacity-50"
+                  >
+                    {verifyingId === claim.id ? "Submitting…" : "Get verified"}
+                  </button>
+                )}
+                {requestedIds.has(claim.id) && claim.claim_type !== "evidenced" && (
+                  <span className="text-[10px] uppercase tracking-wider px-2 py-1 rounded bg-void text-brand-violet border border-brand-violet/20">
+                    Requested
+                  </span>
+                )}
                 <select
                   value={claim.proficiency_level ?? ""}
                   onChange={(e) => handleProficiency(claim.id, e.target.value)}

@@ -11,6 +11,8 @@ const NAV_LINKS = [
   { href: "/profile/me", label: "Profile" },
   { href: "/profile/me/skills", label: "Skills" },
   { href: "/profile/me/services", label: "Services" },
+  { href: "/profile/me/evidence", label: "Evidence" },
+  { href: "/organizations", label: "Organizations" },
   { href: "/analyze", label: "Analysis" },
 ];
 

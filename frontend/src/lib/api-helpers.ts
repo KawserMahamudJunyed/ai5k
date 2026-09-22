@@ -273,6 +273,12 @@ export interface PresignResponse {
   expires_in: number;
 }
 
+export interface SkillLink {
+  id: string;
+  evidence_id: string;
+  profile_skill_id: string;
+}
+
 export interface EvidenceRead {
   id: string;
   profile_id: string;
@@ -284,6 +290,7 @@ export interface EvidenceRead {
   description: string | null;
   verification_status: "pending" | "verified" | "rejected";
   uploaded_at: string;
+  skill_links: SkillLink[];
 }
 
 export async function presignEvidence(
@@ -328,4 +335,193 @@ export async function createEvidence(
     body: JSON.stringify(body),
   });
   return res.json();
+}
+
+export async function listEvidence(profileId: string): Promise<EvidenceRead[]> {
+  const res = await fetchWithAuth(`/profiles/${profileId}/evidence`);
+  return res.json();
+}
+
+export async function deleteEvidence(profileId: string, evidenceId: string): Promise<void> {
+  await fetchWithAuth(`/profiles/${profileId}/evidence/${evidenceId}`, {
+    method: "DELETE",
+  });
+}
+
+export async function linkEvidenceToSkill(
+  profileId: string,
+  evidenceId: string,
+  profileSkillId: string,
+): Promise<void> {
+  await fetchWithAuth(`/profiles/${profileId}/evidence/${evidenceId}/skill-links`, {
+    method: "POST",
+    body: JSON.stringify({ profile_skill_id: profileSkillId }),
+  });
+}
+
+export async function unlinkEvidenceFromSkill(
+  profileId: string,
+  evidenceId: string,
+  linkId: string,
+): Promise<void> {
+  await fetchWithAuth(`/profiles/${profileId}/evidence/${evidenceId}/skill-links/${linkId}`, {
+    method: "DELETE",
+  });
+}
+
+// ---- Verification requests ----
+
+export interface VerificationRequest {
+  id: string;
+  requestor_id: string;
+  target_type: "profile_skill" | "identity_doc";
+  target_id: string;
+  status: "pending" | "approved" | "rejected";
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  created_at: string;
+}
+
+export async function createVerificationRequest(
+  targetType: "profile_skill" | "identity_doc",
+  targetId: string,
+): Promise<VerificationRequest> {
+  const res = await fetchWithAuth("/verification-requests", {
+    method: "POST",
+    body: JSON.stringify({ target_type: targetType, target_id: targetId }),
+  });
+  return res.json();
+}
+
+// ---- Organizations ----
+
+export interface Organization {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  website_url: string | null;
+  status: string;
+  created_at: string;
+}
+
+export interface OrgMember {
+  id: string;
+  organization_id: string;
+  user: { id: string; email: string; full_name: string };
+  status: string;
+  consent_given: boolean;
+  joined_at: string | null;
+}
+
+export interface Invitation {
+  member_id: string;
+  organization_id: string;
+  organization_name: string;
+  invited_at: string | null;
+}
+
+export interface AggregateSkillRow {
+  skill_id: string;
+  name: string;
+  category: string | null;
+  member_count: number;
+  evidenced_count: number;
+  self_declared_count: number;
+}
+
+// Client-side suggestion for the slug field; the server is the authority
+// (allows only [a-z0-9-], else 422 invalid_slug).
+export function slugifyOrgName(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 128);
+}
+
+export async function createOrganization(body: {
+  name: string;
+  slug?: string;
+  description?: string;
+  website_url?: string;
+}): Promise<Organization> {
+  const res = await fetchWithAuth("/organizations", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+  return res.json();
+}
+
+export async function listMyOrganizations(): Promise<Organization[]> {
+  const res = await fetchWithAuth("/organizations");
+  return res.json();
+}
+
+export async function getOrganization(id: string): Promise<Organization> {
+  const res = await fetchWithAuth(`/organizations/${id}`);
+  return res.json();
+}
+
+export async function updateOrganization(
+  id: string,
+  body: Partial<{ name: string; description: string; website_url: string; logo_url: string }>,
+): Promise<Organization> {
+  const res = await fetchWithAuth(`/organizations/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(body),
+  });
+  return res.json();
+}
+
+export async function listMembers(orgId: string): Promise<OrgMember[]> {
+  const res = await fetchWithAuth(`/organizations/${orgId}/members`);
+  return res.json();
+}
+
+export async function inviteMember(orgId: string, email: string): Promise<OrgMember> {
+  const res = await fetchWithAuth(`/organizations/${orgId}/members`, {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  });
+  return res.json();
+}
+
+export async function removeMember(orgId: string, memberId: string): Promise<void> {
+  await fetchWithAuth(`/organizations/${orgId}/members/${memberId}`, {
+    method: "DELETE",
+  });
+}
+
+export async function giveConsent(orgId: string): Promise<OrgMember> {
+  const res = await fetchWithAuth(`/organizations/${orgId}/members/me/consent`, {
+    method: "POST",
+  });
+  return res.json();
+}
+
+export async function listMyInvitations(): Promise<Invitation[]> {
+  const res = await fetchWithAuth("/organizations/invitations");
+  return res.json();
+}
+
+export async function getOrgSkills(orgId: string): Promise<AggregateSkillRow[]> {
+  const res = await fetchWithAuth(`/organizations/${orgId}/skills`);
+  return res.json();
+}
+
+// Shared error rendering: prefer 422 field details, then the envelope message.
+export function describeApiError(err: unknown): string {
+  if (
+    err instanceof ApiError &&
+    err.status === 422 &&
+    err.details &&
+    typeof err.details === "object"
+  ) {
+    const entries = Object.entries(err.details as Record<string, string>);
+    if (entries.length > 0) {
+      return entries.map(([f, m]) => `${f}: ${m}`).join(" · ");
+    }
+  }
+  return (err as Error).message || "Something went wrong";
 }
