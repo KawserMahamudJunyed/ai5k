@@ -39,12 +39,41 @@ class Settings(BaseSettings):
     opensearch_endpoint: str = ""
     llm_provider_base_url: str = ""
 
+    # --- Profile-readiness pipeline (UF-7) ---
+    # GitHub: classic PAT, no scopes needed. 60 req/h anonymous → 5000 authenticated.
+    github_token: str = ""
+    # RapidAPI key subscribed to `upwork-scraping-api` and `fiverr-scrapper-free`
+    # (reserved for the dedicated Upwork/Fiverr clients; the readiness pipeline
+    # currently corroborates via the ai-backend web-search tool).
+    rapid_api_key: str = ""
+    # External evaluator (ai-backend) base URL + timeout.
+    llm_backend_url: str = "http://127.0.0.1:8001"
+    llm_backend_timeout_seconds: float = 30.0
+    # CV storage override (relative paths resolve against the backend root).
+    # The CV_STORAGE_ROOT environment variable still takes precedence — tests
+    # and deployments set it per-process.
+    cv_storage_dir: str = ""
+    # RapidAPI client cache dirs (relative paths resolve against the backend root).
+    upwork_cache_dir: str = ""
+    fiverr_cache_dir: str = ""
+    # Dev toggles: run the RapidAPI clients against fixtures / skip them entirely.
+    upwork_api_offline: bool = False
+    fiverr_api_offline: bool = False
+    # Score from whatever sources succeeded when some fail (never all-or-nothing).
+    allow_partial_sources: bool = True
+    # Dev-only: allow impersonating a user id via header (never enable outside local).
+    allow_user_id_override: bool = False
+
     # --- Security / observability ---
     cors_origins: list[str] = ["*"]
 
     @property
     def is_local(self) -> bool:
         return self.env == "local"
+
+    @property
+    def github_configured(self) -> bool:
+        return bool(self.github_token)
 
     @property
     def cognito_configured(self) -> bool:

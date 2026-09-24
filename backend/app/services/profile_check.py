@@ -37,6 +37,7 @@ import httpx
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import get_settings
 from app.core.db import SessionLocal
 from app.core.errors import AppError
 from app.models.profile import Profile, ProfileSkill
@@ -72,11 +73,59 @@ CV_ALLOWED_TYPES = {
     "text/plain": ".txt",
     "text/markdown": ".md",
 }
+# Reverse map for the fallback path: browsers don't always send a MIME we know
+# (e.g. application/octet-stream when the OS hasn't mapped the type, or the
+# alternate application/x-pdf). Declared type → filename extension → magic bytes.
+CV_ALLOWED_EXTS = {ext: ct for ct, ext in CV_ALLOWED_TYPES.items()}
 CV_MAX_BYTES = 10 * 1024 * 1024
+
+
+def _resolve_cv_kind(filename: str, content_type: str, data: bytes) -> str | None:
+    """Canonical content type for an upload: declared MIME → extension → magic bytes.
+
+    Returns None when the file is not a supported CV format under any signal.
+    """
+    if content_type in CV_ALLOWED_TYPES:
+        return content_type
+    ext = Path(filename or "").suffix.lower()
+    if ext in CV_ALLOWED_EXTS:
+        return CV_ALLOWED_EXTS[ext]
+    if data[:5] == b"%PDF-":
+        return "application/pdf"
+    if data[:4] == b"PK\x03\x04":  # DOCX is a zip container
+        return "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    # Plain-text fallback: fully decodable UTF-8 with no NULs. Markdown vs txt
+    # is cosmetic — both extract with utf-8. Extension decides the label.
+    if b"\x00" not in data[:4096]:
+        try:
+            data[:4096].decode("utf-8")
+            return "text/markdown" if ext == ".md" else "text/plain"
+        except UnicodeDecodeError:
+            pass
+    return None
 
 # Where uploaded CVs live. Local dev: a repo-ignored directory; production points
 # CV_STORAGE_ROOT at a real volume. Created lazily on first upload.
-CV_STORAGE_ROOT = Path(os.environ.get("CV_STORAGE_ROOT", Path(__file__).resolve().parents[2] / "storage" / "cvs"))
+# CV storage root resolution order: CV_STORAGE_ROOT env (tests/deployments) →
+# CV_STORAGE_DIR from Settings/.env (may be relative → backend root) → default
+# backend/storage/cvs. Created lazily on first upload.
+def _resolve_cv_storage_root() -> Path:
+    env_val = os.environ.get("CV_STORAGE_ROOT")
+    if env_val:
+        return Path(env_val)
+    try:
+        from app.core.config import get_settings as _gs
+
+        cv_dir = _gs().cv_storage_dir
+        if cv_dir:
+            p = Path(cv_dir)
+            return p if p.is_absolute() else Path(__file__).resolve().parents[2] / p
+    except Exception:  # config not initialized (rare, e.g. tooling) — fall through
+        pass
+    return Path(__file__).resolve().parents[2] / "storage" / "cvs"
+
+
+CV_STORAGE_ROOT = _resolve_cv_storage_root()
 
 # GitHub username / profile-id URL forms we accept.
 _GITHUB_RE = re.compile(r"github\.com/([A-Za-z0-9-]{1,39})/?$")
@@ -168,7 +217,11 @@ async def _fetch_github(username: str) -> dict[str, Any]:
     if cached and time.monotonic() - cached[0] < _GH_CACHE_TTL:
         return cached[1]
 
+    # GITHUB_TOKEN lifts the rate limit 60 req/h → 5000 (classic PAT, no scopes).
     headers = {"Accept": "application/vnd.github+json", "User-Agent": "ai5k-readiness"}
+    gh_token = (os.environ.get("GITHUB_TOKEN") or get_settings().github_token).strip()
+    if gh_token:
+        headers["Authorization"] = f"Bearer {gh_token}"
     async with httpx.AsyncClient(timeout=10.0) as client:
         user_resp = await client.get(f"{GITHUB_API}/users/{username}", headers=headers)
         if user_resp.status_code == 404:
@@ -754,12 +807,17 @@ def store_cv(user_id: uuid.UUID, filename: str, content_type: str, data: bytes) 
     Returns (relative_storage_path, original_filename, content_type, size_bytes).
     Raises AppError(422 unsupported_content_type) for non-CV types.
     """
-    ext = CV_ALLOWED_TYPES.get(content_type)
-    if ext is None:
-        allowed = ", ".join(sorted({e for e in CV_ALLOWED_TYPES.values()}))
-        raise AppError(422, "unsupported_content_type", f"CV must be one of: {allowed}.")
     if len(data) == 0:
         raise AppError(422, "empty_file", "The uploaded CV file is empty.")
+    resolved = _resolve_cv_kind(filename, content_type, data)
+    ext = CV_ALLOWED_TYPES.get(resolved) if resolved else None
+    if ext is None:
+        allowed = ", ".join(sorted({e for e in CV_ALLOWED_TYPES.values()}))
+        raise AppError(
+            422,
+            "unsupported_content_type",
+            f"CV must be one of: {allowed}. If your file is one of those, make sure the filename keeps its extension (e.g. cv.pdf).",
+        )
     if len(data) > CV_MAX_BYTES:
         raise AppError(422, "file_too_large", f"CV must be at most {CV_MAX_BYTES // (1024 * 1024)} MB.")
 
@@ -768,7 +826,9 @@ def store_cv(user_id: uuid.UUID, filename: str, content_type: str, data: bytes) 
     dest = CV_STORAGE_ROOT / safe_rel
     dest.parent.mkdir(parents=True, exist_ok=True)
     dest.write_bytes(data)
-    return safe_rel, (filename or f"cv{ext}"), content_type, len(data)
+    # Store the *resolved* canonical type — the declared one may be a browser
+    # guess (application/octet-stream) and drives text extraction later.
+    return safe_rel, (filename or f"cv{ext}"), resolved, len(data)
 
 
 async def create_check(

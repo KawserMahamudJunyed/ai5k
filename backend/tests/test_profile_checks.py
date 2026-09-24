@@ -596,3 +596,52 @@ async def test_rerun_reuses_stored_cv(client):
     empty = await client.post("/api/v1/profile-checks", json={}, headers=headers)
     assert empty.status_code == 422
     assert empty.json()["error"]["code"] == "no_sources"
+
+
+async def test_cv_upload_browser_mime_variants(client):
+    """Browsers don't always send the canonical MIME.
+
+    application/octet-stream (unmapped OS type), application/x-pdf (alternate
+    PDF type), and an empty declared type must still upload — resolved via
+    filename extension, then magic bytes.
+    """
+    headers = await _headers(client)
+    cv_bytes = b"Skills: python, pytorch, langchain, kubernetes.\nRAG pipelines with llm.\n" * 6
+    for declared, fname in [
+        ("application/octet-stream", "cv.txt"),   # extension fallback
+        ("application/octet-stream", "cv.md"),    # extension picks md
+        ("application/x-pdf", "cv.txt"),           # alt MIME + extension
+        ("", "cv.md"),                             # empty declared type
+    ]:
+        resp = await client.post(
+            "/api/v1/profile-checks/cv",
+            files={"file": (fname, cv_bytes, declared)},
+            headers=headers,
+        )
+        assert resp.status_code == 200, f"{declared}/{fname}: {resp.text}"
+        token = resp.json()["cv_token"]
+        # And the token must actually work end-to-end.
+        check = await client.post("/api/v1/profile-checks", json={"cv_token": token}, headers=headers)
+        assert check.status_code == 202, check.text
+        check_id = check.json()["id"]
+        await _run_pipeline_to_completion(check_id)
+        poll = await client.get(f"/api/v1/profile-checks/{check_id}", headers=headers)
+        src = next(s for s in poll.json()["sources"] if s["source"] == "cv")
+        assert src["status"] == "ok", f"{declared}/{fname}: cv source {src}"
+
+    # Real PDF magic under a wrong declared type must pass via magic bytes.
+    pdf = await client.post(
+        "/api/v1/profile-checks/cv",
+        files={"file": ("cv.bin", b"%PDF-1.4\n..." + cv_bytes, "application/octet-stream")},
+        headers=headers,
+    )
+    assert pdf.status_code == 200, pdf.text
+
+    # Garbage bytes with no extension and no usable magic stay rejected.
+    junk = await client.post(
+        "/api/v1/profile-checks/cv",
+        files={"file": ("blob", b"\x00\x01\x02\xff\xfe", "application/octet-stream")},
+        headers=headers,
+    )
+    assert junk.status_code == 422
+    assert junk.json()["error"]["code"] == "unsupported_content_type"

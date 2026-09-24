@@ -78,7 +78,10 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}): Pro
   const headers = new Headers(options.headers || {});
   const token = getAccessToken();
   if (token) headers.set("Authorization", `Bearer ${token}`);
-  if (options.body && !headers.has("Content-Type")) {
+  // FormData sets its own multipart Content-Type (with the boundary) — forcing
+  // JSON here would strip the boundary and the backend would reject the upload.
+  const isFormData = typeof FormData !== "undefined" && options.body instanceof FormData;
+  if (options.body && !isFormData && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
 
@@ -102,7 +105,9 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}): Pro
 
 export async function fetchApi(url: string, options: RequestInit = {}): Promise<Response> {
   const headers = new Headers(options.headers || {});
-  if (options.body && !headers.has("Content-Type")) {
+  // Same FormData rule as fetchWithAuth — the browser owns the multipart header.
+  const isFormData = typeof FormData !== "undefined" && options.body instanceof FormData;
+  if (options.body && !isFormData && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
   const res = await fetch(`${API_BASE}${url}`, { ...options, headers });
