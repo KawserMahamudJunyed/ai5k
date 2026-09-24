@@ -266,12 +266,6 @@ function Verdict({
             </p>
           </div>
           <div className="flex-1 space-y-2">
-            {result.capped && (
-              <div className="border border-white/30 rounded-md p-4 bg-white/5">
-                <p className="font-mono text-micro text-coral">EVIDENCE CAP — HELD AT {result.result.cap.at}</p>
-                <p className="text-sm text-white/80 mt-1">{result.result.cap.reason}</p>
-              </div>
-            )}
             {result.partial && (
               <div className="border border-white/20 rounded-md p-4 bg-white/5">
                 <p className="font-mono text-micro text-white/60">PARTIAL — SOME SOURCES MISSING OR FAILED</p>
