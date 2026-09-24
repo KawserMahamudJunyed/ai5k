@@ -1,167 +1,33 @@
-﻿@tailwind base;
+@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  /* Backgrounds */
-  --color-navy: #0A142F;
-  --color-void: #030712;
-
-  /* Gradient stops */
-  --color-violet: #C488FB;
-  --color-blue: #5B98F7;
-  --color-cyan: #50DFFB;
-  --color-mint: #21FEA9;
-
-  /* Text & neutrals */
-  --color-fog: #9AA3B8;
-  --color-white: #FFFFFF;
-  --color-tier-0: #1F2937;
-  --color-tier-1: #3C4A66;
-  --color-tier-2: #55698F;
-  --color-tier-3: #7A6BB0;
-  --color-tier-4: #2E7FC4;
-  --color-tier-5: #5B98F7;
-  --color-tier-6: #50DFFB;
-  --color-tier-7: #21FEA9;
+  --font-display: "Space Grotesk", "Inter", ui-sans-serif, system-ui;
+  --font-sans: "Inter", Arial, ui-sans-serif, system-ui;
 }
 
-@layer base {
-  html {
-    scroll-behavior: smooth;
-  }
-  
-  body {
-  @apply text-white font-sans antialiased;
-  background-color: var(--color-void);
-  background-image: radial-gradient(ellipse at top, var(--color-navy) 0%, var(--color-void) 80%);
-  background-attachment: fixed;
-  min-height: 100vh;
-}
+html {
+  scroll-behavior: smooth;
 }
 
-@layer components {
-  /* Only applied to the designated components */
-  .btn-gradient {
-    @apply text-void font-medium active:scale-95;
-    background: linear-gradient(135deg, #C488FB, #5B98F7, #50DFFB, #21FEA9);
-    background-size: 300% 300%;
-    background-position: 0% 50%;
-    transition: background-position 0.6s cubic-bezier(0.22, 1, 0.36, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
-  }
-  .btn-gradient:hover {
-    background-position: 100% 50%;
-  }
-  
-  .btn-outline {
-      @apply border border-transparent text-white font-medium transition-colors hover:border-brand-cyan hover:text-brand-cyan active:scale-95;
-    }
+body {
+  @apply bg-canvas text-ink font-sans antialiased;
 }
 
-@layer utilities {
-  .text-gradient {
-    @apply bg-gradient-brand bg-clip-text text-transparent;
-  }
+/* Focus: violet border for text inputs, blue ring elsewhere (DESIGN.md semantic) */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid #9b60aa;
+  outline-offset: 0;
+}
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid #4c6ee6;
+  outline-offset: 2px;
 }
 
-/* Animations */
-@keyframes nodePulse {
-  0%, 100% {
-    filter: drop-shadow(0 0 4px rgba(33, 254, 169, 0.2));
-  }
-  50% {
-    filter: drop-shadow(0 0 16px rgba(33, 254, 169, 0.6));
-  }
+::selection {
+  background: #ffe1d8;
 }
-
-.verified-node-pulse {
-  animation: nodePulse 3s ease-in-out infinite;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *, ::before, ::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
-}
-
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-::-webkit-scrollbar-track {
-  background: var(--color-void);
-}
-::-webkit-scrollbar-thumb {
-  background: var(--color-navy);
-  border-radius: 999px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #3C4A66;
-}
-.divider-gradient-top {
-  position: relative;
-}
-.divider-gradient-top::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background-image: var(--gradient-brand);
-  opacity: 0.2;
-  pointer-events: none;
-}
-.divider-gradient-bottom {
-  position: relative;
-}
-.divider-gradient-bottom::after {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background-image: var(--gradient-brand);
-  opacity: 0.2;
-  pointer-events: none;
-}
-.nav-link-animated {
-  position: relative;
-}
-.nav-link-animated::after {
-  content: "";
-  position: absolute;
-  width: 100%;
-  transform: scaleX(0);
-  height: 2px;
-  bottom: 0;
-  left: 0;
-  background-image: var(--gradient-brand);
-  transform-origin: bottom right;
-  transition: transform 0.3s ease-out;
-}
-.nav-link-animated:hover::after {
-  transform: scaleX(1);
-  transform-origin: bottom left;
-}
-
-
-
-@keyframes shimmer { 0% { background-position: 0% 50%; } 100% { background-position: 100% 50%; } }
-
-
-
-
-
-
-
-
-
-
-
-

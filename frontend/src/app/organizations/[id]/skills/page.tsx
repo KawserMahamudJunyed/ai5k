@@ -1,29 +1,24 @@
 "use client";
 
-// Org aggregate skills (REVIEW.md 2.5). GET /organizations/{id}/skills —
-// members see skill counts across consenting members; 403 for outsiders.
+// Aggregate skills — UF-8e. GET /organizations/{id}/skills (members only).
 
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import OrgTabNav from "@/components/org/OrgTabNav";
 import AppShell from "@/components/layout/AppShell";
-import { ApiError } from "@/lib/api";
-import {
-  describeApiError,
-  getOrgSkills,
-  type AggregateSkillRow,
-} from "@/lib/api-helpers";
+import OrgTabNav from "@/components/org/OrgTabNav";
+import { Notice, PageHeader, Spinner } from "@/components/ui/Bits";
+import { describeApiError, getOrgSkills, type AggregateSkillRow } from "@/lib/api-helpers";
 
-function SkillBar({ label, count, total }: { label: string; count: number; total: number }) {
+function Bar({ label, count, total }: { label: string; count: number; total: number }) {
   const pct = total > 0 ? Math.round((count / total) * 100) : 0;
   return (
     <div>
       <div className="flex justify-between text-xs mb-1">
-        <span className="text-fog">{label}</span>
-        <span className="text-white">{count}</span>
+        <span className="text-muted">{label}</span>
+        <span className="text-ink">{count}</span>
       </div>
-      <div className="w-full h-1.5 bg-void rounded-full overflow-hidden">
-        <div className="h-full bg-brand-blue" style={{ width: `${pct}%` }} />
+      <div className="w-full h-1.5 bg-hairline/50 rounded-full overflow-hidden">
+        <div className="h-full bg-brand-green" style={{ width: `${pct}%` }} />
       </div>
     </div>
   );
@@ -37,80 +32,47 @@ function OrgSkillsInner({ orgId }: { orgId: string }) {
     getOrgSkills(orgId)
       .then(setRows)
       .catch((err) => {
-        if (err instanceof ApiError && err.status === 403) {
-          setError("Only organization members can view the aggregate skills.");
-        } else {
-          setError(describeApiError(err));
-        }
+        if ((err as { status?: number }).status === 403) setError("Only organization members can view the aggregate skills.");
+        else setError(describeApiError(err));
       });
   }, [orgId]);
 
-  useEffect(() => {
-    load();
-  }, [load]);
+  useEffect(() => { load(); }, [load]);
 
   return (
-    <main className="py-12 px-6 relative">
-      <div className="absolute top-0 right-0 w-[700px] h-[700px] bg-brand-blue/10 blur-[150px] rounded-full pointer-events-none" />
-      <div className="max-w-3xl mx-auto relative z-10">
-        <header className="mb-8">
-          <h1 className="font-display text-3xl font-bold text-white">Aggregate skills</h1>
-          <p className="text-fog mt-2">
-            What your organization can do, counted across consenting members.
-          </p>
-        </header>
+    <main className="max-w-text mx-auto px-6 py-12">
+      <PageHeader eyebrow="Capability" title="Aggregate skills"
+        lede="What your organization can do, counted across consenting members." />
 
-        <OrgTabNav orgId={orgId} />
+      <OrgTabNav orgId={orgId} />
 
-        {error && (
-          <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
-            {error}
-          </div>
-        )}
+      {error && <Notice kind="error">{error}</Notice>}
 
-        {rows === null && !error ? (
-          <div className="flex justify-center py-16">
-            <div className="w-12 h-12 rounded-full border-4 border-brand-cyan/20 border-t-brand-cyan animate-spin" />
-          </div>
-        ) : rows !== null && rows.length === 0 ? (
-          <div className="bg-surface-elevated/80 border border-white/10 rounded-2xl p-10 text-center">
-            <p className="text-fog">
-              No skill data yet — members must consent, and at least one member needs claimed skills.
-            </p>
-          </div>
-        ) : rows !== null ? (
-          <div className="space-y-3">
-            {rows.map((row) => (
-              <div
-                key={row.skill_id}
-                className="p-5 rounded-xl bg-surface-card border border-surface-card-border"
-              >
-                <div className="flex items-start justify-between gap-4 mb-3">
-                  <div>
-                    <p className="text-white font-semibold">{row.name}</p>
-                    {row.category && <p className="text-xs text-fog mt-0.5">{row.category}</p>}
-                  </div>
-                  <span className="text-xs uppercase tracking-wider px-2 py-1 rounded bg-void text-fog border border-white/10">
-                    {row.member_count} member{row.member_count !== 1 ? "s" : ""}
-                  </span>
+      {rows === null && !error ? (
+        <div className="flex justify-center py-16"><Spinner /></div>
+      ) : rows !== null && rows.length === 0 ? (
+        <p className="text-center py-16 text-muted border border-hairline rounded-md">
+          No skill data yet — members must consent, and at least one member needs claimed skills.
+        </p>
+      ) : rows !== null ? (
+        <div className="space-y-6">
+          {rows.map((row) => (
+            <div key={row.skill_id} className="border-b border-hairline pb-5">
+              <div className="flex items-start justify-between gap-4 mb-3">
+                <div>
+                  <p className="text-ink font-medium">{row.name}</p>
+                  {row.category && <p className="text-xs text-muted mt-0.5">{row.category}</p>}
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <SkillBar
-                    label="Evidenced"
-                    count={row.evidenced_count}
-                    total={row.member_count}
-                  />
-                  <SkillBar
-                    label="Self-declared"
-                    count={row.self_declared_count}
-                    total={row.member_count}
-                  />
-                </div>
+                <span className="font-mono text-micro text-muted uppercase">{row.member_count} member{row.member_count !== 1 ? "s" : ""}</span>
               </div>
-            ))}
-          </div>
-        ) : null}
-      </div>
+              <div className="grid sm:grid-cols-2 gap-4">
+                <Bar label="Evidenced" count={row.evidenced_count} total={row.member_count} />
+                <Bar label="Self-declared" count={row.self_declared_count} total={row.member_count} />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : null}
     </main>
   );
 }

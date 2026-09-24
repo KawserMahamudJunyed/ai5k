@@ -29,12 +29,17 @@ STATUS_PENDING = "pending"
 STATUS_VERIFIED = "verified"
 STATUS_REJECTED = "rejected"
 
-# Content types accepted for file uploads; drives the S3 key extension.
+# Content types accepted for file uploads; drives the storage key extension.
+# PDF/images go to S3; documents (DOCX/TXT/MD) may also land in local storage
+# when no bucket is configured (see services/evidence.py).
 ALLOWED_CONTENT_TYPES: dict[str, str] = {
     "application/pdf": ".pdf",
     "image/png": ".png",
     "image/jpeg": ".jpg",
     "image/webp": ".webp",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": ".docx",
+    "text/plain": ".txt",
+    "text/markdown": ".md",
 }
 
 

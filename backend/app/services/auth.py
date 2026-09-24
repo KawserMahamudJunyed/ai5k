@@ -159,6 +159,75 @@ async def login(
     return access_token, refresh_token, token_manager.settings.access_token_ttl_seconds
 
 
+async def change_password(
+    db: AsyncSession,
+    user: User,
+    *,
+    current_password: str,
+    new_password: str,
+    ip_address: str | None = None,
+) -> User:
+    """Re-authenticate with the current password, then rotate the stored hash."""
+    # Cognito-managed accounts have no local hash; their credentials live in Cognito.
+    if not user.password_hash:
+        raise AppError(409, "cognito_managed", "This account's credentials are managed by Cognito.")
+    if not verify_password(current_password, user.password_hash):
+        raise AppError(401, "invalid_credentials", "Current password is incorrect.")
+    if len(new_password) < 8:
+        raise AppError(422, "weak_password", "Password must be at least 8 characters.")
+
+    user.password_hash = hash_password(new_password)
+    await write_audit_log(
+        db,
+        actor_id=user.id,
+        action="user.password_changed",
+        entity_type="user",
+        entity_id=user.id,
+        ip_address=ip_address,
+    )
+    await db.commit()
+    await db.refresh(user)
+    return user
+
+
+async def change_email(
+    db: AsyncSession,
+    user: User,
+    *,
+    new_email: str,
+    current_password: str,
+    ip_address: str | None = None,
+) -> User:
+    """Re-authenticate, then move the account to a new email.
+
+    The new address must not already belong to another account. The account keeps
+    its active status (no re-verification round-trip in the local path).
+    """
+    if not verify_password(current_password, user.password_hash):
+        raise AppError(401, "invalid_credentials", "Current password is incorrect.")
+
+    normalized = _normalize_email(new_email)
+    if normalized == user.email:
+        raise AppError(422, "email_unchanged", "That is already your current email.")
+    if await get_user_by_email(db, normalized):
+        raise AppError(409, "email_already_registered", "An account with that email already exists.")
+
+    old_email = user.email
+    user.email = normalized
+    await write_audit_log(
+        db,
+        actor_id=user.id,
+        action="user.email_changed",
+        entity_type="user",
+        entity_id=user.id,
+        metadata={"old_email": old_email, "new_email": normalized},
+        ip_address=ip_address,
+    )
+    await db.commit()
+    await db.refresh(user)
+    return user
+
+
 async def refresh_access_token(
     db: AsyncSession, refresh_token: str, token_manager: TokenManager
 ) -> tuple[str, int]:

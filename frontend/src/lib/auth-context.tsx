@@ -1,7 +1,8 @@
 "use client";
 
-// Session bootstrap + RBAC hook + route guard (REVIEW.md items 0.6–0.8).
-// Resolves the logged-in user via GET /auth/me and exposes role helpers.
+// Session bootstrap + RBAC hook + route guard. ApplicationFlow.md §3, §8.
+// Resolves the logged-in user via GET /auth/me; guards redirect anonymous
+// users to /login preserving the return path.
 
 import {
   createContext,
@@ -35,7 +36,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
 
   const refresh = useCallback(async () => {
-    // No token at all → nothing to resolve (still "loaded", just anonymous).
     if (typeof window === "undefined" || !getAccessToken()) {
       setState({ user: null, roles: [], loading: false });
       return;
@@ -44,11 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const me = await getMe();
       setState({ user: me.user, roles: me.roles, loading: false });
     } catch (err) {
-      // 401 already cleared tokens inside fetchWithAuth; other errors keep the
-      // session but surface as logged-out.
-      if (err instanceof ApiError && err.status === 401) {
-        clearAuthTokens();
-      }
+      if (err instanceof ApiError && err.status === 401) clearAuthTokens();
       setState({ user: null, roles: [], loading: false });
     }
   }, []);
@@ -63,10 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     router.push("/login");
   }, [router]);
 
-  const value = useMemo(
-    () => ({ ...state, refresh, logout }),
-    [state, refresh, logout],
-  );
+  const value = useMemo(() => ({ ...state, refresh, logout }), [state, refresh, logout]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
@@ -77,12 +70,6 @@ export function useAuth(): AuthState {
   return ctx;
 }
 
-/**
- * RBAC helper (REVIEW.md 0.7). Example:
- *   const { hasRole } = usePermissions();
- *   hasRole("org_admin", orgId)   // org-scoped check
- *   hasRole("platform_admin")     // platform-wide check
- */
 export function usePermissions() {
   const { roles } = useAuth();
   return useMemo(
@@ -92,9 +79,7 @@ export function usePermissions() {
         roles.some(
           (r) =>
             r.name === name &&
-            (organizationId === undefined
-              ? true
-              : r.organization_id === organizationId),
+            (organizationId === undefined ? true : r.organization_id === organizationId),
         ),
       isPlatformAdmin: roles.some((r) => r.name === "platform_admin"),
     }),
@@ -102,23 +87,16 @@ export function usePermissions() {
   );
 }
 
-/**
- * Route guard (REVIEW.md 0.8). Renders children only for authed users;
- * anonymous visitors are redirected to /login (preserving the return path).
- * A stored token with an unresolved user re-triggers bootstrap instead of
- * redirecting (covers the just-logged-in race after client-side navigation).
- */
 export function RequireAuth({ children }: { children: ReactNode }) {
   const { user, loading, refresh } = useAuth();
   const router = useRouter();
   const [checking, setChecking] = useState(false);
 
-  const tokenPresent =
-    typeof window !== "undefined" && Boolean(getAccessToken());
+  const tokenPresent = typeof window !== "undefined" && Boolean(getAccessToken());
 
   useEffect(() => {
     if (!loading && !user && tokenPresent) {
-      // Stale context (e.g. login happened in this SPA session): re-resolve.
+      // Stale context (login happened in this SPA session): re-resolve.
       setChecking(true);
       void refresh().finally(() => setChecking(false));
     }
@@ -133,8 +111,8 @@ export function RequireAuth({ children }: { children: ReactNode }) {
 
   if (loading || checking || (tokenPresent && !user)) {
     return (
-      <main className="flex min-h-screen items-center justify-center">
-        <div className="w-12 h-12 rounded-full border-4 border-brand-cyan/20 border-t-brand-cyan animate-spin" />
+      <main className="flex min-h-screen items-center justify-center bg-canvas">
+        <div className="w-10 h-10 rounded-full border-2 border-hairline border-t-ink animate-spin" />
       </main>
     );
   }

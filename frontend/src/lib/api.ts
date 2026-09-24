@@ -1,6 +1,5 @@
-// API client for the AI5K backend (FastAPI).
-// Base URL comes from NEXT_PUBLIC_API_BASE_URL (defaults to the local backend).
-// See backend/docs/FRONTEND-GUIDE.md for the API contract.
+// API client for the AI5K backend (FastAPI). See DOCS/ApplicationFlow.md §3.
+// Base URL from NEXT_PUBLIC_API_BASE_URL (default local backend /api/v1).
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api/v1";
@@ -64,7 +63,6 @@ async function parseError(res: Response): Promise<ApiError> {
     if (body?.error?.code) code = body.error.code;
     if (body?.error?.message) message = body.error.message;
     if (body?.error?.details) details = body.error.details;
-    // Pydantic 422 validation errors carry field info in details.
     if (res.status === 422 && Array.isArray(details) && details.length > 0) {
       const first = details[0];
       const field = Array.isArray(first.loc) ? first.loc.join(".") : "input";
@@ -87,7 +85,6 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}): Pro
   let res = await fetch(`${API_BASE}${url}`, { ...options, headers });
 
   if (res.status === 401) {
-    // One-time refresh-and-retry; on failure clear tokens and return to login.
     const newToken = await refreshAccessToken();
     if (newToken) {
       headers.set("Authorization", `Bearer ${newToken}`);
@@ -103,8 +100,6 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}): Pro
   return res;
 }
 
-// Raw fetch without auth (signup, login, verify-email) — still parses the
-// backend error envelope so pages can branch on error codes.
 export async function fetchApi(url: string, options: RequestInit = {}): Promise<Response> {
   const headers = new Headers(options.headers || {});
   if (options.body && !headers.has("Content-Type")) {

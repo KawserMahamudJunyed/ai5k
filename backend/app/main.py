@@ -11,6 +11,7 @@ from app.api.v1 import (
     auth,
     evidence,
     organizations,
+    profile_checks,
     profiles,
     roles,
     skills,
@@ -60,6 +61,7 @@ app.include_router(skills.router, prefix=api_v1)
 app.include_router(skills.claims_router, prefix=api_v1)
 app.include_router(evidence.router, prefix=api_v1)
 app.include_router(verification.router, prefix=api_v1)
+app.include_router(profile_checks.router, prefix=api_v1)
 app.include_router(admin.router, prefix=api_v1)
 app.include_router(audit_logs.router, prefix=api_v1)
 

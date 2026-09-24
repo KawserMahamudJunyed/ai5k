@@ -15,6 +15,9 @@ from app.core.errors import AppError
 from app.core.security import TokenManager, get_token_manager
 from app.models.identity import User
 from app.schemas.auth import (
+    ChangeEmailRequest,
+    ChangeEmailResponse,
+    ChangePasswordRequest,
     LoginRequest,
     MeResponse,
     RefreshRequest,
@@ -94,6 +97,39 @@ async def refresh(
 ) -> RefreshResponse:
     access, expires_in = await auth_service.refresh_access_token(db, body.refresh_token, token_manager)
     return RefreshResponse(access_token=access, expires_in=expires_in)
+
+
+@router.post("/change-password", status_code=204)
+async def change_password(
+    body: ChangePasswordRequest,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> None:
+    await auth_service.change_password(
+        db,
+        user,
+        current_password=body.current_password,
+        new_password=body.new_password,
+        ip_address=_ip(request),
+    )
+
+
+@router.post("/change-email", response_model=ChangeEmailResponse)
+async def change_email(
+    body: ChangeEmailRequest,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> ChangeEmailResponse:
+    updated = await auth_service.change_email(
+        db,
+        user,
+        new_email=body.new_email,
+        current_password=body.current_password,
+        ip_address=_ip(request),
+    )
+    return ChangeEmailResponse(id=updated.id, email=updated.email, status=updated.status)
 
 
 @router.get("/me", response_model=MeResponse)

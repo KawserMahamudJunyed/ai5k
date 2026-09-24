@@ -1,7 +1,6 @@
 "use client";
 
-// AppShell = RequireAuth guard + AppHeader nav. Use it on every authed page
-// instead of nesting guard + header separately.
+// AppShell = RequireAuth guard + AppHeader. Wrap every authed page.
 
 import type { ReactNode } from "react";
 import { RequireAuth } from "@/lib/auth-context";

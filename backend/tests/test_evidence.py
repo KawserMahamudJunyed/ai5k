@@ -245,8 +245,9 @@ async def test_source_type_validation(client, monkeypatch):
     assert bad_type.status_code == 422
 
 
-async def test_file_evidence_503_without_storage(client):
-    """File types need a bucket; with storage unset the API answers 503, links still work."""
+async def test_file_evidence_without_storage_local_fallback(client):
+    """Without S3: presign is 503, but CV-uploaded files attach as evidence
+    (local:// rows); foreign/garbage file_keys are rejected with 422."""
     token = await activated_user_token(client, "ev5@example.com", "E5")
     profile, _claim = await _base(client, token, "ev5@example.com")
     base = f"/api/v1/profiles/{profile['id']}/evidence"
@@ -260,13 +261,28 @@ async def test_file_evidence_503_without_storage(client):
     assert presign.status_code == 503
     assert presign.json()["error"]["code"] == "storage_not_configured"
 
+    # Upload a file through the CV store, then attach it as document evidence.
+    upload = await client.post(
+        "/api/v1/profile-checks/cv",
+        files={"file": ("notes.md", ("python pytorch " * 60).encode(), "text/markdown")},
+        headers=headers,
+    )
+    assert upload.status_code == 200, upload.text
+    attach = await client.post(
+        "/api/v1/profile-checks/cv/attach-evidence",
+        headers=headers,
+        json={"cv_token": upload.json()["cv_token"], "source_type": "document", "title": "My notes"},
+    )
+    assert attach.status_code == 201, attach.text
+
+    # A made-up file_key cannot attach (traversal/ownership guard).
     file_row = await client.post(
         base,
         headers=headers,
         json={"source_type": "document", "title": "X", "file_key": f"evidence/{profile['id']}/a.pdf"},
     )
-    assert file_row.status_code == 503
-    assert file_row.json()["error"]["code"] == "storage_not_configured"
+    assert file_row.status_code == 422
+    assert file_row.json()["error"]["code"] == "invalid_file_key"
 
     link_row = await client.post(
         base,

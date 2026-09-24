@@ -26,6 +26,7 @@ from app.schemas.evidence import (
     SkillLinkRead,
 )
 from app.services import evidence as evidence_service
+from app.services.profile_check import CV_STORAGE_ROOT
 from app.services.storage import S3Storage, get_storage, presign_get_for_file_url
 
 router = APIRouter(prefix="/profiles/{profile_id}/evidence", tags=["evidence"])
@@ -37,6 +38,17 @@ def _ip(request: Request) -> str | None:
 
 def _storage() -> S3Storage | None:
     return get_storage(get_settings())
+
+
+def _download_url_for(evidence) -> str | None:
+    """Presigned S3 URL for s3:// rows; a backend download route for local:// rows."""
+    if not evidence.file_url:
+        return None
+    if evidence.file_url.startswith("local://"):
+        rel = evidence.file_url[len("local://"):]
+        return f"/api/v1/profiles/{evidence.profile_id}/evidence/{evidence.id}/file"
+    storage = _storage()
+    return presign_get_for_file_url(storage, evidence.file_url) if storage is not None else None
 
 
 def _evidence_read(evidence, download_url: str | None = None) -> EvidenceRead:
@@ -123,15 +135,7 @@ async def list_evidence(
     profile = await evidence_service.require_evidence_view(db, user, profile_id)
     storage = _storage()
     rows = await evidence_service.list_profile_evidence(db, profile.id)
-    out = []
-    for evidence in rows:
-        download_url = (
-            presign_get_for_file_url(storage, evidence.file_url)
-            if storage is not None and evidence.file_url
-            else None
-        )
-        out.append(_evidence_read(evidence, download_url))
-    return out
+    return [_evidence_read(evidence, _download_url_for(evidence)) for evidence in rows]
 
 
 @router.get("/{evidence_id}", response_model=EvidenceRead)
@@ -143,13 +147,31 @@ async def get_evidence(
 ) -> EvidenceRead:
     profile = await evidence_service.require_evidence_view(db, user, profile_id)
     evidence = await _load_evidence_or_404(db, profile.id, evidence_id)
-    storage = _storage()
-    download_url = (
-        presign_get_for_file_url(storage, evidence.file_url)
-        if storage is not None and evidence.file_url
-        else None
-    )
-    return _evidence_read(evidence, download_url)
+    return _evidence_read(evidence, _download_url_for(evidence))
+
+
+@router.get("/{evidence_id}/file")
+async def download_local_file(
+    profile_id: uuid.UUID,
+    evidence_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Stream a locally-stored evidence file (local:// rows; no S3 configured)."""
+    from fastapi.responses import FileResponse
+
+    from app.services.profile_check import resolve_local_evidence_path
+
+    profile = await evidence_service.require_evidence_view(db, user, profile_id)
+    evidence = await _load_evidence_or_404(db, profile.id, evidence_id)
+    if not evidence.file_url or not evidence.file_url.startswith("local://"):
+        raise AppError(422, "not_local_file", "This evidence is not stored locally.")
+    rel = evidence.file_url[len("local://"):]
+    path = resolve_local_evidence_path(profile.user_id, rel)
+    if path is None:
+        raise AppError(404, "file_missing", "The stored file is gone.")
+    filename = evidence.title or rel.split("/")[-1]
+    return FileResponse(path, filename=filename)
 
 
 @router.delete("/{evidence_id}", status_code=204)

@@ -1,16 +1,14 @@
-// Typed helpers for the AI5K backend endpoints used by the frontend.
-// Shapes mirror backend/app/schemas (auth.py, profile.py, evidence.py).
+// Typed helpers for the AI5K backend. Shapes mirror backend/app/schemas.
+// Contract reference: DOCS/ApplicationFlow.md §5–§6.
 
 import {
   ApiError,
-  clearAuthTokens,
   fetchApi,
   fetchWithAuth,
-  getAccessToken,
   setAuthTokens,
 } from "./api";
 
-export { setAuthTokens, clearAuthTokens, getAccessToken, ApiError };
+export { ApiError, setAuthTokens };
 
 // ---- Auth ----
 
@@ -33,8 +31,7 @@ export interface SignupResponse {
   email: string;
   full_name: string;
   status: string;
-  // Present only when the backend runs with ENV=local.
-  verification_token: string | null;
+  verification_token: string | null; // ENV=local only
 }
 
 export interface LoginResponse {
@@ -44,17 +41,7 @@ export interface LoginResponse {
   expires_in: number;
 }
 
-export interface RefreshResponse {
-  access_token: string;
-  token_type: string;
-  expires_in: number;
-}
-
-export async function signup(
-  email: string,
-  password: string,
-  fullName: string,
-): Promise<SignupResponse> {
+export async function signup(email: string, password: string, fullName: string): Promise<SignupResponse> {
   const res = await fetchApi("/auth/signup", {
     method: "POST",
     body: JSON.stringify({ email, password, full_name: fullName }),
@@ -74,14 +61,6 @@ export async function login(email: string, password: string): Promise<LoginRespo
   const res = await fetchApi("/auth/login", {
     method: "POST",
     body: JSON.stringify({ email, password }),
-  });
-  return res.json();
-}
-
-export async function refresh(refreshToken: string): Promise<RefreshResponse> {
-  const res = await fetchApi("/auth/refresh", {
-    method: "POST",
-    body: JSON.stringify({ refresh_token: refreshToken }),
   });
   return res.json();
 }
@@ -112,6 +91,21 @@ export interface ProfileRead {
   updated_at: string;
 }
 
+function normalizeUrl(u: string): string {
+  const t = u.trim();
+  return t && !/^https?:\/\//i.test(t) ? `https://${t}` : t;
+}
+export { normalizeUrl };
+
+// Shared error rendering: prefer 422 field details, then envelope message.
+export function describeApiError(err: unknown): string {
+  if (err instanceof ApiError && err.status === 422 && err.details && typeof err.details === "object") {
+    const entries = Object.entries(err.details as Record<string, string>);
+    if (entries.length > 0) return entries.map(([f, m]) => `${f}: ${m}`).join(" · ");
+  }
+  return (err as Error).message || "Something went wrong";
+}
+
 export async function createProfile(body: {
   display_name: string;
   headline?: string | null;
@@ -119,10 +113,7 @@ export async function createProfile(body: {
   portfolio_links?: PortfolioLink[];
   visibility?: "private" | "public";
 }): Promise<ProfileRead> {
-  const res = await fetchWithAuth("/profiles", {
-    method: "POST",
-    body: JSON.stringify(body),
-  });
+  const res = await fetchWithAuth("/profiles", { method: "POST", body: JSON.stringify(body) });
   return res.json();
 }
 
@@ -138,18 +129,15 @@ export async function getProfile(id: string): Promise<ProfileRead> {
 
 export async function updateProfile(
   id: string,
-  body: {
-    display_name?: string;
-    headline?: string | null;
-    job_roles?: string[];
-    portfolio_links?: PortfolioLink[];
-    visibility?: "private" | "public";
-  },
+  body: Partial<{
+    display_name: string;
+    headline: string | null;
+    job_roles: string[];
+    portfolio_links: PortfolioLink[];
+    visibility: "private" | "public";
+  }>,
 ): Promise<ProfileRead> {
-  const res = await fetchWithAuth(`/profiles/${id}`, {
-    method: "PATCH",
-    body: JSON.stringify(body),
-  });
+  const res = await fetchWithAuth(`/profiles/${id}`, { method: "PATCH", body: JSON.stringify(body) });
   return res.json();
 }
 
@@ -201,11 +189,7 @@ export async function addSkillClaim(
   return res.json();
 }
 
-export async function updateSkillClaim(
-  profileId: string,
-  claimId: string,
-  proficiency_level: string,
-): Promise<SkillClaim> {
+export async function updateSkillClaim(profileId: string, claimId: string, proficiency_level: string): Promise<SkillClaim> {
   const res = await fetchWithAuth(`/profiles/${profileId}/skills/${claimId}`, {
     method: "PATCH",
     body: JSON.stringify({ proficiency_level }),
@@ -305,30 +289,18 @@ export async function presignEvidence(
   return res.json();
 }
 
-export async function uploadToS3(
-  uploadUrl: string,
-  contentType: string,
-  file: File,
-): Promise<void> {
+export async function uploadToS3(uploadUrl: string, contentType: string, file: File): Promise<void> {
   const res = await fetch(uploadUrl, {
     method: "PUT",
     headers: { "Content-Type": contentType },
     body: file,
   });
-  if (!res.ok) {
-    throw new Error(`Upload failed (${res.status})`);
-  }
+  if (!res.ok) throw new Error(`Upload failed (${res.status})`);
 }
 
 export async function createEvidence(
   profileId: string,
-  body: {
-    source_type: SourceType;
-    title: string;
-    description?: string;
-    url?: string;
-    file_key?: string;
-  },
+  body: { source_type: SourceType; title: string; description?: string; url?: string; file_key?: string },
 ): Promise<EvidenceRead> {
   const res = await fetchWithAuth(`/profiles/${profileId}/evidence`, {
     method: "POST",
@@ -343,30 +315,18 @@ export async function listEvidence(profileId: string): Promise<EvidenceRead[]> {
 }
 
 export async function deleteEvidence(profileId: string, evidenceId: string): Promise<void> {
-  await fetchWithAuth(`/profiles/${profileId}/evidence/${evidenceId}`, {
-    method: "DELETE",
-  });
+  await fetchWithAuth(`/profiles/${profileId}/evidence/${evidenceId}`, { method: "DELETE" });
 }
 
-export async function linkEvidenceToSkill(
-  profileId: string,
-  evidenceId: string,
-  profileSkillId: string,
-): Promise<void> {
+export async function linkEvidenceToSkill(profileId: string, evidenceId: string, profileSkillId: string): Promise<void> {
   await fetchWithAuth(`/profiles/${profileId}/evidence/${evidenceId}/skill-links`, {
     method: "POST",
     body: JSON.stringify({ profile_skill_id: profileSkillId }),
   });
 }
 
-export async function unlinkEvidenceFromSkill(
-  profileId: string,
-  evidenceId: string,
-  linkId: string,
-): Promise<void> {
-  await fetchWithAuth(`/profiles/${profileId}/evidence/${evidenceId}/skill-links/${linkId}`, {
-    method: "DELETE",
-  });
+export async function unlinkEvidenceFromSkill(profileId: string, evidenceId: string, linkId: string): Promise<void> {
+  await fetchWithAuth(`/profiles/${profileId}/evidence/${evidenceId}/skill-links/${linkId}`, { method: "DELETE" });
 }
 
 // ---- Verification requests ----
@@ -389,6 +349,28 @@ export async function createVerificationRequest(
   const res = await fetchWithAuth("/verification-requests", {
     method: "POST",
     body: JSON.stringify({ target_type: targetType, target_id: targetId }),
+  });
+  return res.json();
+}
+
+export async function listVerificationRequests(
+  status = "pending",
+  page = 1,
+  pageSize = 50,
+): Promise<{ data: VerificationRequest[]; total: number; page: number; page_size: number }> {
+  const params = new URLSearchParams({ status, page: String(page), page_size: String(pageSize) });
+  const res = await fetchWithAuth(`/verification-requests?${params.toString()}`);
+  return res.json();
+}
+
+export async function decideVerificationRequest(
+  requestId: string,
+  approved: boolean,
+  note?: string,
+): Promise<VerificationRequest> {
+  const res = await fetchWithAuth(`/verification-requests/${requestId}/${approved ? "approve" : "reject"}`, {
+    method: "POST",
+    body: JSON.stringify({ note: note || undefined }),
   });
   return res.json();
 }
@@ -430,8 +412,6 @@ export interface AggregateSkillRow {
   self_declared_count: number;
 }
 
-// Client-side suggestion for the slug field; the server is the authority
-// (allows only [a-z0-9-], else 422 invalid_slug).
 export function slugifyOrgName(name: string): string {
   return name
     .toLowerCase()
@@ -446,10 +426,7 @@ export async function createOrganization(body: {
   description?: string;
   website_url?: string;
 }): Promise<Organization> {
-  const res = await fetchWithAuth("/organizations", {
-    method: "POST",
-    body: JSON.stringify(body),
-  });
+  const res = await fetchWithAuth("/organizations", { method: "POST", body: JSON.stringify(body) });
   return res.json();
 }
 
@@ -467,10 +444,7 @@ export async function updateOrganization(
   id: string,
   body: Partial<{ name: string; description: string; website_url: string; logo_url: string }>,
 ): Promise<Organization> {
-  const res = await fetchWithAuth(`/organizations/${id}`, {
-    method: "PATCH",
-    body: JSON.stringify(body),
-  });
+  const res = await fetchWithAuth(`/organizations/${id}`, { method: "PATCH", body: JSON.stringify(body) });
   return res.json();
 }
 
@@ -488,15 +462,11 @@ export async function inviteMember(orgId: string, email: string): Promise<OrgMem
 }
 
 export async function removeMember(orgId: string, memberId: string): Promise<void> {
-  await fetchWithAuth(`/organizations/${orgId}/members/${memberId}`, {
-    method: "DELETE",
-  });
+  await fetchWithAuth(`/organizations/${orgId}/members/${memberId}`, { method: "DELETE" });
 }
 
 export async function giveConsent(orgId: string): Promise<OrgMember> {
-  const res = await fetchWithAuth(`/organizations/${orgId}/members/me/consent`, {
-    method: "POST",
-  });
+  const res = await fetchWithAuth(`/organizations/${orgId}/members/me/consent`, { method: "POST" });
   return res.json();
 }
 
@@ -510,18 +480,168 @@ export async function getOrgSkills(orgId: string): Promise<AggregateSkillRow[]> 
   return res.json();
 }
 
-// Shared error rendering: prefer 422 field details, then the envelope message.
-export function describeApiError(err: unknown): string {
-  if (
-    err instanceof ApiError &&
-    err.status === 422 &&
-    err.details &&
-    typeof err.details === "object"
-  ) {
-    const entries = Object.entries(err.details as Record<string, string>);
-    if (entries.length > 0) {
-      return entries.map(([f, m]) => `${f}: ${m}`).join(" · ");
-    }
+// ---- Roles (admin) ----
+
+export interface Role {
+  id: string;
+  name: string;
+  description: string | null;
+}
+
+export async function listRoles(): Promise<Role[]> {
+  const res = await fetchWithAuth("/roles");
+  return res.json();
+}
+
+// ---- Profile checks (readiness analysis, UF-7) ----
+
+export type CheckStatus = "pending" | "fetching" | "evaluating" | "completed" | "failed";
+
+export interface CheckSource {
+  source: "cv" | "github" | "upwork" | "fiverr";
+  status: "ok" | "failed" | "skipped";
+  error_code: string | null;
+  error_message: string | null;
+  from_cache: boolean;
+  duration_ms: number | null;
+  fetched_at: string;
+  raw: { filename?: string; chars?: number } | null;
+}
+
+export interface CheckDimension {
+  key: string;
+  label: string;
+  points: number;
+  max: number;
+  signals: string[];
+}
+
+export interface CheckResultDetail {
+  evaluator: string;
+  readiness_raw: number;
+  cap: { capped: boolean; at: number; reason: string | null };
+  dimensions: CheckDimension[];
+}
+
+export interface ProfileCheckResultRead {
+  readiness: number;
+  capped: boolean;
+  partial: boolean;
+  result: CheckResultDetail;
+  claims: { id: string; evidenced: boolean }[];
+  skill_audit: { evidenced: number; self_declared: number; note: string } | null;
+  sources_used: string[];
+  generation_skipped: boolean;
+  duration_ms: number | null;
+  created_at: string;
+}
+
+export interface ProfileCheck {
+  id: string;
+  status: CheckStatus;
+  github_url: string | null;
+  upwork_url: string | null;
+  fiverr_url: string | null;
+  attempts: number;
+  error_code: string | null;
+  error_message: string | null;
+  created_at: string;
+  updated_at: string;
+  sources: CheckSource[];
+  result: ProfileCheckResultRead | null;
+}
+
+export async function uploadCv(file: File): Promise<{ cv_token: string; filename: string; content_type: string; size_bytes: number }> {
+  const form = new FormData();
+  form.append("file", file);
+  const res = await fetchWithAuth("/profile-checks/cv", { method: "POST", body: form });
+  return res.json();
+}
+
+export async function attachCvAsEvidence(body: {
+  cv_token: string;
+  source_type: "certificate" | "document";
+  title?: string;
+  description?: string;
+}): Promise<{ id: string; profile_id: string; title: string; source_type: string; verification_status: string }> {
+  const res = await fetchWithAuth("/profile-checks/cv/attach-evidence", { method: "POST", body: JSON.stringify(body) });
+  return res.json();
+}
+
+export interface CvSkillSuggestions {
+  check_id: string;
+  filename: string | null;
+  suggested: string[];
+  already_claimed: string[];
+  error?: string;
+}
+
+export async function getCvSkillSuggestions(): Promise<CvSkillSuggestions | null> {
+  const res = await fetchWithAuth("/profile-checks/cv/suggestions");
+  if (res.status === 404) return null;
+  return res.json();
+}
+
+/** Authenticated download for locally-stored evidence (download_url starting with "/"). */
+export async function downloadEvidenceFile(downloadUrl: string): Promise<void> {
+  const path = downloadUrl.startsWith("/api/v1/") ? downloadUrl.slice("/api/v1".length) : downloadUrl;
+  const res = await fetchWithAuth(path);
+  if (!res.ok) throw new ApiError(res.status, "download_failed", "Could not download the file.");
+  const blob = await res.blob();
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(a.href);
+}
+
+export async function createProfileCheck(body: {
+  github_url?: string;
+  upwork_url?: string;
+  fiverr_url?: string;
+  cv_token?: string;
+  reuse_cv?: boolean;
+}): Promise<{ id: string; status: string; poll_url: string }> {
+  const res = await fetchWithAuth("/profile-checks", { method: "POST", body: JSON.stringify(body) });
+  return res.json();
+}
+
+export async function getProfileCheck(id: string): Promise<ProfileCheck> {
+  const res = await fetchWithAuth(`/profile-checks/${id}`);
+  return res.json();
+}
+
+export async function getLatestProfileCheck(): Promise<ProfileCheck | null> {
+  const res = await fetchWithAuth("/profile-checks/latest");
+  if (res.status === 404) return null;
+  return res.json();
+}
+
+// ---- Account (change password / email) ----
+
+export async function changePassword(currentPassword: string, newPassword: string): Promise<void> {
+  const res = await fetchWithAuth("/auth/change-password", {
+    method: "POST",
+    body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }),
+  });
+  if (res.status !== 204) {
+    let code = "unknown_error";
+    let message = `Request failed (${res.status})`;
+    try {
+      const body = await res.json();
+      code = body?.error?.code ?? code;
+      message = body?.error?.message ?? message;
+    } catch { /* non-JSON */ }
+    throw new ApiError(res.status, code, message);
   }
-  return (err as Error).message || "Something went wrong";
+}
+
+export async function changeEmail(newEmail: string, currentPassword: string): Promise<{ email: string }> {
+  const res = await fetchWithAuth("/auth/change-email", {
+    method: "POST",
+    body: JSON.stringify({ new_email: newEmail, current_password: currentPassword }),
+  });
+  return res.json();
 }

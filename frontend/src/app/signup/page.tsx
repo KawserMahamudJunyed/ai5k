@@ -1,155 +1,92 @@
-﻿"use client";
+"use client";
 
-import Image from "next/image";
+// Signup — UF-2. POST /auth/signup; dev-mode verification_token hands off to
+// /verify-email. Errors branch on code (email_already_registered, weak_password).
+
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
-import { signup } from "@/lib/api-helpers";
-import { Eye, EyeOff } from "lucide-react";
+import { Field, inputClass, Notice } from "@/components/ui/Bits";
+import { signup, ApiError } from "@/lib/api-helpers";
 
 export default function SignupPage() {
+  const router = useRouter();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const router = useRouter();
 
-  const calculateStrength = (pass: string) => {
-    if (!pass) return 0;
-    let score = 0;
-    if (pass.length >= 8) score += 1;
-    if (pass.match(/[a-z]/) && pass.match(/[A-Z]/)) score += 1;
-    if (pass.match(/\d/)) score += 1;
-    if (pass.match(/[^a-zA-Z\d]/)) score += 1;
-    return score;
-  };
-
-  const strength = calculateStrength(password);
-  
-  const handleSignup = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    setLoading(true);
-
+    setBusy(true);
     try {
-      const data = await signup(email, password, fullName);
-
-      // ENV=local only: backend returns the verification token directly —
-      // stash it so /verify-email can activate the account without email.
-      if (data.verification_token) {
-        sessionStorage.setItem("ai5k_verification_token", data.verification_token);
-      }
-      // New users always land on verify-email; login applies the smart
-      // post-login routing (profile vs onboarding).
-      router.push("/verify-email?email=" + encodeURIComponent(email));
+      const data = await signup(email.trim(), password, fullName.trim());
+      const params = new URLSearchParams({ email: data.email });
+      if (data.verification_token) params.set("token", data.verification_token);
+      router.push(`/verify-email?${params.toString()}`);
     } catch (err) {
-      setError((err as Error).message || "An error occurred");
-    } finally {
-      setLoading(false);
+      if (err instanceof ApiError && err.code === "email_already_registered") {
+        setError("An account with that email already exists. Try logging in.");
+      } else if (err instanceof ApiError && err.code === "weak_password") {
+        setError("Password must be at least 8 characters.");
+      } else {
+        setError((err as Error).message || "Signup failed");
+      }
+      setBusy(false);
     }
   };
 
   return (
-    <main className="flex min-h-screen items-center justify-center  p-6 relative">
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-brand-violet/20 blur-[120px] rounded-full pointer-events-none"></div>
-
-      <div className="w-full max-w-md relative z-10">
-        <div className="flex justify-center mb-10">
-          <Link href="/" className="inline-block transition-transform hover:scale-105">
-            <div className="relative w-56 h-20">
-              <Image src="/assets/logo.png" alt="AI5K Logo" fill className="object-contain" />
-            </div>
-          </Link>
+    <main className="min-h-screen grid md:grid-cols-2">
+      {/* Left: brand panel */}
+      <section className="hidden md:flex flex-col justify-between bg-stone p-12">
+        <Link href="/" className="font-display text-ink">AI5K</Link>
+        <div>
+          <h2 className="text-section-heading font-display text-ink">
+            Your evidence,<br />your reputation.
+          </h2>
+          <p className="text-body text-muted mt-4 max-w-sm">
+            Create your account, build an evidence-backed profile, and pursue global opportunities.
+          </p>
         </div>
-        
-        <div className="bg-surface-elevated/80 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl">
-          <h1 className="font-display text-2xl font-bold text-white mb-2">Create your account</h1>
-          <p className="text-fog mb-8">Join the verified AI capability network.</p>
+        <p className="text-micro text-muted-2">No income guarantees. Verification-based access.</p>
+      </section>
 
-          {error && (
-            <div className="mb-6 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
-              {error}
-            </div>
-          )}
+      {/* Right: form */}
+      <section className="flex items-center justify-center p-6">
+        <div className="w-full max-w-md bg-canvas border border-hairline rounded-md p-8">
+          <h1 className="text-card-heading font-display text-ink mb-2">Create your account</h1>
+          <p className="text-sm text-muted mb-8">Join the verified AI capability network.</p>
 
-          <form onSubmit={handleSignup} className="space-y-5">
-            <div>
-              <label className="block text-sm font-medium text-fog mb-1.5" htmlFor="fullName">Full name</label>
-              <input 
-                id="fullName" type="text" required
-                value={fullName} onChange={(e) => setFullName(e.target.value)}
-                className="w-full bg-void border border-white/10 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-brand-violet transition-shadow placeholder:text-white/20"
-                placeholder="John Doe"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-fog mb-1.5" htmlFor="email">Email</label>
-              <input 
-                id="email" type="email" required
-                value={email} onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-void border border-white/10 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-brand-violet transition-shadow placeholder:text-white/20"
-                placeholder="you@example.com"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-fog mb-1.5" htmlFor="password">Password</label>
-              <div className="relative mb-2">
-                <input 
-                  id="password" type={showPassword ? "text" : "password"} required
-                  value={password} onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-void border border-white/10 rounded-lg pl-4 pr-11 py-3 text-white focus:ring-2 focus:ring-brand-violet transition-shadow placeholder:text-white/20"
-                  placeholder="Create a strong password"
-                />
-                <button 
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-fog hover:text-white transition-colors"
-                >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
-              
-              {password.length > 0 && (
-                <div className="flex gap-1.5 mt-2">
-                  {[1, 2, 3, 4].map((level) => (
-                    <div 
-                      key={level} 
-                      className={`h-1 flex-1 rounded-full transition-all duration-300 ${
-                        strength >= level 
-                          ? strength === 1 ? 'bg-red-400' 
-                            : strength === 2 ? 'bg-orange-400' 
-                            : strength === 3 ? 'bg-brand-cyan' 
-                            : 'bg-brand-mint'
-                          : 'bg-white/10'
-                      }`}
-                    />
-                  ))}
-                </div>
-              )}
-              {password.length > 0 && (
-                <p className={`text-xs mt-1.5 ${strength < 2 ? 'text-red-400' : strength < 4 ? 'text-brand-cyan' : 'text-brand-mint'}`}>
-                  {strength < 2 ? 'Weak' : strength < 4 ? 'Good' : 'Strong'}
-                </p>
-              )}
-            </div>
-            
-            <Button type="submit" className="w-full py-3 mt-4" disabled={loading || (password.length > 0 && strength < 2)}>
-              {loading ? "Creating account..." : "Sign up"}
+          {error && <div className="mb-6"><Notice kind="error">{error}</Notice></div>}
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <Field label="Full name" htmlFor="fullName" required>
+              <input id="fullName" type="text" required maxLength={255} value={fullName}
+                onChange={(e) => setFullName(e.target.value)} className={inputClass} />
+            </Field>
+            <Field label="Email" htmlFor="email" required>
+              <input id="email" type="email" required value={email}
+                onChange={(e) => setEmail(e.target.value)} className={inputClass} />
+            </Field>
+            <Field label="Password" htmlFor="password" required hint="(8+ characters)">
+              <input id="password" type="password" required minLength={8} value={password}
+                onChange={(e) => setPassword(e.target.value)} className={inputClass} />
+            </Field>
+            <Button type="submit" disabled={busy} className="w-full">
+              {busy ? "Creating…" : "Sign up"}
             </Button>
           </form>
 
-          <p className="mt-8 text-center text-sm text-fog">
+          <p className="text-sm text-muted mt-6 text-center">
             Already have an account?{" "}
-            <Link href="/login" className="text-white hover:text-brand-violet font-medium transition-colors">
-              Log in
-            </Link>
+            <Link href="/login" className="text-blue underline underline-offset-4">Log in</Link>
           </p>
         </div>
-      </div>
+      </section>
     </main>
   );
 }
-

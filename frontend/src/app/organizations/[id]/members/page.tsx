@@ -1,23 +1,16 @@
 "use client";
 
-// Members admin (REVIEW.md 2.3). GET/POST/DELETE /organizations/{id}/members.
-// Error codes: member_exists, cannot_remove_self, user_not_found, member_not_found.
-// No backend email — invite confirmation is visible here only.
+// Members admin — UF-8c. Invite by email (account must exist; backend sends
+// no email — UI surfaces the "share the site URL" instruction).
 
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import OrgTabNav from "@/components/org/OrgTabNav";
 import AppShell from "@/components/layout/AppShell";
 import Button from "@/components/ui/Button";
+import OrgTabNav from "@/components/org/OrgTabNav";
+import { Chip, Field, inputClass, Notice, PageHeader, Spinner } from "@/components/ui/Bits";
 import { usePermissions } from "@/lib/auth-context";
-import { ApiError } from "@/lib/api";
-import {
-  describeApiError,
-  listMembers,
-  inviteMember,
-  removeMember,
-  type OrgMember,
-} from "@/lib/api-helpers";
+import { describeApiError, inviteMember, listMembers, removeMember, type OrgMember } from "@/lib/api-helpers";
 
 function MembersInner({ orgId }: { orgId: string }) {
   const { hasRole, isPlatformAdmin } = usePermissions();
@@ -34,158 +27,94 @@ function MembersInner({ orgId }: { orgId: string }) {
     listMembers(orgId)
       .then(setMembers)
       .catch((err) => {
-        if (err instanceof ApiError && err.status === 403) {
-          setError("Only organization admins can view the members list.");
-        } else {
-          setError(describeApiError(err));
-        }
+        if ((err as { status?: number }).status === 403) setError("Only organization admins can view the members list.");
+        else setError(describeApiError(err));
         setMembers([]);
       });
   }, [orgId, isAdmin]);
 
-  useEffect(() => {
-    load();
-  }, [load]);
+  useEffect(() => { load(); }, [load]);
 
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
-    setNotice("");
-    setInviting(true);
+    setError(""); setNotice(""); setInviting(true);
     try {
       const m = await inviteMember(orgId, email.trim());
       setMembers((prev) => (prev ? [...prev, m] : [m]));
-      setNotice(
-        `${m.user.full_name} (${m.user.email}) added — share the site URL with them; the backend sends no email. They'll find the org under Organizations.`,
-      );
+      setNotice(`${m.user.full_name} (${m.user.email}) added — share the site URL with them; no email is sent. They'll find the org under Organizations.`);
       setEmail("");
     } catch (err) {
-      if (err instanceof ApiError && err.status === 409 && err.code === "member_exists") {
-        setError("That person is already a member (or already invited).");
-      } else {
-        setError(describeApiError(err));
-      }
+      const code = (err as { code?: string }).code;
+      if (code === "member_exists") setError("That person is already a member (or already invited).");
+      else if (code === "user_not_found") setError("No AI5K account uses that email yet — they need to sign up first.");
+      else setError(describeApiError(err));
     } finally {
       setInviting(false);
     }
   };
 
   const handleRemove = async (m: OrgMember) => {
-    setError("");
-    setNotice("");
+    setError(""); setNotice("");
     try {
       await removeMember(orgId, m.id);
       setMembers((prev) => (prev ? prev.filter((x) => x.id !== m.id) : []));
     } catch (err) {
-      if (err instanceof ApiError && err.status === 409 && err.code === "cannot_remove_self") {
-        setError("You can't remove yourself — ask another org admin.");
-      } else {
-        setError(describeApiError(err));
-      }
+      if ((err as { code?: string }).code === "cannot_remove_self") setError("You can't remove yourself — ask another org admin.");
+      else setError(describeApiError(err));
     }
   };
 
   if (!isAdmin) {
     return (
       <main className="flex min-h-[60vh] items-center justify-center p-6">
-        <div className="max-w-md text-center bg-surface-elevated/80 border border-white/10 rounded-2xl p-10">
-          <h1 className="font-display text-2xl font-bold text-white mb-3">Admins only</h1>
-          <p className="text-fog">Members administration requires the org_admin role.</p>
+        <div className="max-w-md text-center border border-hairline rounded-md p-10 bg-canvas">
+          <h1 className="text-card-heading font-display text-ink mb-3">Admins only</h1>
+          <p className="text-muted">Members administration requires the org_admin role.</p>
         </div>
       </main>
     );
   }
 
   return (
-    <main className="py-12 px-6 relative">
-      <div className="absolute top-0 right-0 w-[700px] h-[700px] bg-brand-blue/10 blur-[150px] rounded-full pointer-events-none" />
-      <div className="max-w-3xl mx-auto relative z-10">
-        <header className="mb-8">
-          <h1 className="font-display text-3xl font-bold text-white">Members</h1>
-          <p className="text-fog mt-2">People in your organization and their membership status.</p>
-        </header>
+    <main className="max-w-text mx-auto px-6 py-12">
+      <PageHeader eyebrow="Team" title="Members" lede="People in your organization and their consent status." />
 
-        <OrgTabNav orgId={orgId} />
+      <OrgTabNav orgId={orgId} />
 
-        <form
-          onSubmit={handleInvite}
-          className="mb-8 bg-surface-elevated/80 border border-white/10 rounded-2xl p-6 space-y-4"
-        >
-          <div>
-            <label className="block text-sm font-medium text-fog mb-1.5" htmlFor="inviteEmail">
-              Invite by email{" "}
-              <span className="text-fog/60">(they must already have an AI5K account)</span>
-            </label>
-            <div className="flex gap-2">
-              <input
-                id="inviteEmail" type="email" required
-                placeholder="colleague@example.com"
-                value={email} onChange={(e) => setEmail(e.target.value)}
-                className="flex-1 bg-void border border-white/10 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-brand-cyan"
-              />
-              <Button type="submit" disabled={inviting}>
-                {inviting ? "Adding…" : "Add member"}
-              </Button>
-            </div>
+      <form onSubmit={handleInvite} className="bg-canvas border border-hairline rounded-md p-6 mb-8 space-y-4">
+        <Field label="Invite by email" htmlFor="invEmail" hint="(they must already have an AI5K account)">
+          <div className="flex gap-2">
+            <input id="invEmail" type="email" required placeholder="colleague@example.com"
+              value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} />
+            <Button type="submit" disabled={inviting}>{inviting ? "Adding…" : "Add member"}</Button>
           </div>
-          {error && (
-            <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
-              {error}
-            </div>
-          )}
-          {notice && (
-            <div className="p-3 rounded-lg bg-brand-mint/10 border border-brand-mint/20 text-brand-mint text-sm">
-              {notice}
-            </div>
-          )}
-        </form>
+        </Field>
+        {error && <Notice kind="error">{error}</Notice>}
+        {notice && <Notice kind="ok">{notice}</Notice>}
+      </form>
 
-        <div className="space-y-2">
-          {members === null ? (
-            <div className="flex justify-center py-12">
-              <div className="w-12 h-12 rounded-full border-4 border-brand-cyan/20 border-t-brand-cyan animate-spin" />
-            </div>
-          ) : members.length === 0 ? (
-            <p className="text-fog">No members yet — invite someone above.</p>
-          ) : (
-            members.map((m) => (
-              <div
-                key={m.id}
-                className="p-4 rounded-xl bg-surface-card border border-surface-card-border flex flex-col sm:flex-row sm:items-center justify-between gap-3"
-              >
-                <div>
-                  <p className="text-white font-medium">
-                    {m.user.full_name} <span className="text-fog text-sm">· {m.user.email}</span>
-                  </p>
-                  <p className="text-xs text-fog mt-1">
-                    {m.consent_given
-                      ? "Consented — skills appear in aggregate view"
-                      : "Awaiting consent — not yet visible in aggregate skills"}
-                  </p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span
-                    className={`text-xs uppercase tracking-wider px-2 py-1 rounded border ${
-                      m.consent_given
-                        ? "bg-brand-mint/10 text-brand-mint border-brand-mint/20"
-                        : "bg-void text-fog border-white/10"
-                    }`}
-                  >
-                    {m.status}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => handleRemove(m)}
-                    className="text-sm text-fog hover:text-red-400 transition-colors"
-                  >
-                    Remove
-                  </button>
-                </div>
+      {members === null ? (
+        <div className="flex justify-center py-12"><Spinner /></div>
+      ) : members.length === 0 ? (
+        <p className="text-center py-16 text-muted border border-hairline rounded-md">No members yet — invite someone above.</p>
+      ) : (
+        <div className="divide-y divide-hairline border-y border-hairline">
+          {members.map((m) => (
+            <div key={m.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 py-4">
+              <div>
+                <p className="text-ink font-medium">{m.user.full_name} <span className="text-muted text-sm">· {m.user.email}</span></p>
+                <p className="text-xs text-muted mt-1">
+                  {m.consent_given ? "Consented — skills appear in aggregate view" : "Awaiting consent — not yet visible in aggregate skills"}
+                </p>
               </div>
-            ))
-          )}
+              <div className="flex items-center gap-3">
+                <Chip tone={m.consent_given ? "green" : "neutral"}>{m.status}</Chip>
+                <button type="button" onClick={() => handleRemove(m)} className="text-sm text-muted hover:text-error-red">Remove</button>
+              </div>
+            </div>
+          ))}
         </div>
-      </div>
+      )}
     </main>
   );
 }

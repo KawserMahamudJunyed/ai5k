@@ -70,13 +70,26 @@ async def create_evidence(
         raise AppError(422, "invalid_source_type", f"source_type must be one of: {', '.join(SOURCE_TYPES)}.")
 
     if source_type in FILE_SOURCE_TYPES:
-        if storage is None:
-            raise AppError(503, "storage_not_configured", "File uploads require S3_EVIDENCE_BUCKET to be configured.")
         if not file_key:
-            raise AppError(422, "file_key_required", f"{source_type} evidence requires a presigned file_key.")
-        if not storage.validate_key(profile.id, file_key):
-            raise AppError(422, "invalid_file_key", "file_key does not match a presigned upload for this profile.")
-        file_url: str | None = storage.file_url(file_key)
+            raise AppError(422, "file_key_required", f"{source_type} evidence requires a file_key.")
+        if storage is not None:
+            # S3 path: key must be one this profile was issued (prefix + traversal guard).
+            if not storage.validate_key(profile.id, file_key):
+                raise AppError(422, "invalid_file_key", "file_key does not match a presigned upload for this profile.")
+            file_url: str | None = storage.file_url(file_key)
+        else:
+            # Local-storage fallback (no bucket configured): the file was uploaded
+            # through POST /profile-checks/cv into the CV store and is attached by
+            # its storage-path token. Same traversal guard, local `local://` scheme.
+            from app.services.profile_check import CV_STORAGE_ROOT, resolve_local_evidence_path
+
+            local = resolve_local_evidence_path(profile.user_id, file_key)
+            if local is None:
+                raise AppError(
+                    422, "invalid_file_key",
+                    "file_key does not match an uploaded file for this profile.",
+                )
+            file_url = f"local://{file_key}"  # path relative to CV_STORAGE_ROOT
     else:
         if file_key:
             raise AppError(422, "file_key_not_allowed", f"{source_type} evidence takes a url, not a file_key.")
