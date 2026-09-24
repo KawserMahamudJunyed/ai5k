@@ -195,13 +195,13 @@ Errors: `422 no_sources` · `422 invalid_url` (details name the bad fields) · `
 
 Status walk: `pending → fetching → evaluating → completed | failed` (FastAPI BackgroundTasks; the background entry point opens its own session via `SessionLocal`). GitHub is fetched live (public API, cached 1h per username); Upwork/Fiverr go through the web-search tool; CV is `skipped` until file-upload wiring lands. The tool's verdicts: `websearch_tool_unavailable` (module/`requests`/`ddgs` missing), `websearch_not_configured` (no provider + no keyless fallback), `no_strong_match` (search ran, nothing ≥ threshold 90), `websearch_error`.
 
-**Scoring (max 100):** GitHub footprint 25 · Upwork/Fiverr presence 20 (10 each, strong-match corroboration) · AI5K profile completeness 20 (headline/roles/links/visibility) · skill claims 30 (10 per evidenced up to 20, 2 per self-declared up to 10) · CV 5 (present 2 + recognized-skill keywords 3). **Evidence cap:** no evidenced claim → score held at 30 (`capped=true`, reason surfaced).
+**Scoring (max 100):** GitHub footprint 25 · Upwork/Fiverr presence 20 (10 each, strong-match corroboration) · AI5K profile completeness 20 (headline/roles/links/visibility) · skill claims 30 (10 per evidenced up to 20, 2 per self-declared up to 10) · CV 5 (present 2 + recognized-skill keywords 3). **No evidence cap** — the score is the uncapped sum of its dimensions regardless of verification state (`capped` is always `false`; the field remains in payloads for backward compatibility).
 
 **UI obligations (implemented on `/analyze`):**
 - Poll until terminal; surface the status walk while polling (Queued → Fetching → Scoring).
 - Per-source honesty panel: `ok` / `failed` (human message + `error_code`) / `skipped`.
 - `PARTIAL` badge when any source failed or was skipped.
-- `EVIDENCE CAP` band next to the score when capped.
+- No `EVIDENCE CAP` band — the cap was removed; the score never holds artificially.
 - Dimension bars with signals; skill audit (evidenced vs self-declared); re-run affordance (sends `reuse_cv: true`; re-links the stored CV server-side).
 - **Score-lift callout** (after a re-run): the previous completed score is snapshotted client-side *only after the new run is accepted* (a failed create can never fake a 0-lift banner); the next verdict shows `▲ +n SINCE YOUR LAST CHECK` / `▼ n` / `— NO CHANGE` in the score band.
 - **Claims-since prompt:** the verdict diffs the user's *current* claim count against the check's stored `claims` snapshot — "n skills claimed since this check — re-run to fold them into your score" with an inline re-run button; updates live as chips are claimed; disappears once the check includes them.

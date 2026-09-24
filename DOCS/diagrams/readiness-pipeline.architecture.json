@@ -44,6 +44,6 @@
   "cards": [
     { "dot": "cyan", "title": "Contract", "items": ["POST → 202 {id, poll_url}", "UI polls GET /profile-checks/{id} every 2s"] },
     { "dot": "emerald", "title": "Backend owns data", "items": ["Raw payloads stored in profile_check_sources", "CV text extracted server-side (pypdf / docx2txt)", "ai-backend invoked as a tool, never bypasses the API"] },
-    { "dot": "rose", "title": "Honest failure", "items": ["Per-source ok / failed / skipped", "Score held at 30 without evidenced claims (evidence cap)"] }
+    { "dot": "rose", "title": "Honest failure", "items": ["Per-source ok / failed / skipped", "No artificial ceiling — the score is the honest sum of its dimensions"] }
   ]
 }

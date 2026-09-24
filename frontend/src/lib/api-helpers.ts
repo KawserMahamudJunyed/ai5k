@@ -519,7 +519,7 @@ export interface CheckDimension {
 export interface CheckResultDetail {
   evaluator: string;
   readiness_raw: number;
-  cap: { capped: boolean; at: number; reason: string | null };
+  cap: { capped: boolean; at: number | null; reason: string | null };
   dimensions: CheckDimension[];
 }
 

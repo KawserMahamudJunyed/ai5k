@@ -107,8 +107,8 @@ async def test_full_pipeline_github_only(client):
     data = poll.json()
     assert data["status"] == "completed"
     assert data["result"] is not None
-    assert 0 <= data["result"]["readiness"] <= 30  # capped: no evidenced skills
-    assert data["result"]["capped"] is True
+    assert 0 <= data["result"]["readiness"] <= 95  # uncapped: honest dimension sum
+    assert data["result"]["capped"] is False
     assert data["result"]["partial"] is True  # upwork/fiverr/cv skipped
     src = {s["source"]: s for s in data["sources"]}
     assert src["github"]["status"] == "ok"
@@ -195,8 +195,8 @@ async def test_github_user_not_found_is_failed_not_check_failed(client):
     assert src["github"]["error_code"] == "github_user_not_found"
 
 
-async def test_evidenced_skill_lifts_the_cap(client):
-    """With an evidenced claim the score may exceed 30."""
+async def test_evidenced_skill_raises_claims_dimension(client):
+    """Evidenced claims score 10 each in the claims dimension (10 vs 2 for self-declared)."""
     headers = await _headers(client)
 
     # Create a profile + skill claim, then flip it to evidenced directly in the DB.
@@ -248,7 +248,7 @@ async def test_evidenced_skill_lifts_the_cap(client):
 
     poll = await client.get(f"/api/v1/profile-checks/{check_id}", headers=headers)
     data = poll.json()
-    assert data["result"]["capped"] is False
+    assert data["result"]["capped"] is False  # cap removed — always False now
     dims = {d["key"]: d for d in data["result"]["result"]["dimensions"]}
     assert dims["claims"]["points"] >= 10
 

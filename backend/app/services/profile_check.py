@@ -17,9 +17,9 @@ Per-source honesty — a source is one of:
     failed    we tried and it errored (error_code says why)
     skipped   not supplied by the user
 
-The evidence cap: when no admin-verified ("evidenced") skill claim corroborates
-the profile, the readiness score is held at 30 with `capped=True` — surfaced
-because "why is my score 30" is the first question every user asks.
+The score is the honest sum of its dimensions — no artificial ceiling. Skill
+claims contribute whether they are self-declared or evidenced; verification
+raises quality, it does not gate the score.
 """
 
 import asyncio
@@ -57,7 +57,9 @@ from app.models.profile_check import (
 )
 
 GITHUB_API = "https://api.github.com"
-EVIDENCE_CAP = 30
+# NOTE: the evidence cap (score held at 30 without evidenced claims) was
+# removed by product decision — the readiness score is now the honest sum of
+# its dimensions regardless of verification state.
 
 # Score dimensions (total 100).
 MAX_GITHUB = 25
@@ -541,7 +543,7 @@ def _score_profile(db_profile: Profile | None) -> dict[str, Any]:
 
 
 async def _score_claims(db: AsyncSession, profile: Profile | None) -> dict[str, Any]:
-    """0–30: skill claims. Evidenced claims are what lift the evidence cap."""
+    """0–30: skill claims. Verification raises the tier, not a gate on the score."""
     claims: list[ProfileSkill] = []
     if profile is not None:
         rows = await db.execute(select(ProfileSkill).where(ProfileSkill.profile_id == profile.id))
@@ -591,19 +593,16 @@ async def evaluate(
         github_score["points"] + external_score["points"]
         + profile_score["points"] + claims_score["points"] + cv_score["points"]
     )
-    capped = claims_score["evidenced_count"] == 0
-    readiness = min(readiness_raw, EVIDENCE_CAP) if capped else readiness_raw
+    capped = False
+    readiness = readiness_raw
 
     result = {
         "evaluator": "local-v1+websearch",
         "readiness_raw": readiness_raw,
         "cap": {
-            "capped": capped,
-            "at": EVIDENCE_CAP,
-            "reason": (
-                "Nothing admin-verified corroborates your skills yet — get a skill "
-                "verified to lift the cap." if capped else None
-            ),
+            "capped": False,
+            "at": None,
+            "reason": None,
         },
         "dimensions": [
             {"key": "github", "label": "GitHub footprint", **github_score},
@@ -674,9 +673,7 @@ async def run_check(db: AsyncSession, check: ProfileCheck) -> None:
         if row is None:
             row = ProfileCheckResult(check_id=check.id)
             db.add(row)
-        row.readiness = int(result["readiness_raw"]) if not capped else min(
-            int(result["readiness_raw"]), EVIDENCE_CAP
-        )
+        row.readiness = int(result["readiness_raw"])
         row.capped = capped
         row.result = result
         row.claims = claims

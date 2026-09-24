@@ -152,7 +152,7 @@ Each row shows: source type, verification status chip (`pending`/`verified`/`rej
 
 **Verdict screen shows (all implemented on `/analyze`):**
 - **Readiness score 0–95** across four dimensions — GitHub footprint 25, Upwork/Fiverr presence 20 (via the web-search tool), AI5K profile completeness 20, skill claims 30 — with per-dimension bars and signal lists.
-- **Evidence cap:** with no admin-verified ("evidenced") skill claim the score is **held at 30** and the reason is surfaced in the score band (the #1 "why is my score 30" question).
+- **No artificial ceiling:** the score is the honest sum of its dimensions whether claims are self-declared or evidenced — verification raises the claims-dimension tier (10 pts vs 2 pts each), it does not gate the score.
 - **Per-source honesty:** each of CV / GitHub / Upwork / Fiverr shown as `ok` (payload fetched), `failed` (human message + machine `error_code` — e.g. `github_rate_limited`, `no_strong_match`, `websearch_not_configured`), or `skipped` (not supplied). A `PARTIAL` badge appears when any source failed/skipped — a Fiverr timeout must never look like an empty profile.
 - **Skill audit:** evidenced vs self-declared counts with the CTA to claim/verify more.
 - **"From your CV" suggestions panel** (when a CV was checked): detected skills not yet claimed, ranked by frequency in the CV text — chips (`+ pytorch`) and a **Claim all (n)** button with live "Claiming… n left" progress; per-claim failures never block the batch and are summarized at the end. Hidden entirely when there is no CV or nothing left to suggest.

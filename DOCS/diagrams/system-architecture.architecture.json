@@ -386,7 +386,7 @@
       "items": [
         "Readiness sources report ok / failed / skipped with machine error codes",
         "Verification is decision-once; approval flips claim and evidence tiers",
-        "Score held at 30 until a claim is admin-evidenced"
+        "No artificial ceiling — the score is the honest sum of its dimensions"
       ]
     }
   ]
