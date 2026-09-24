@@ -78,7 +78,7 @@ export default function CvSuggestions({ onClaimed }: { onClaimed?: (names: strin
   }
 
   return (
-    <section className="mt-8 border border-hairline rounded-md p-6 bg-canvas">
+    <section className="mt-8 border border-white/10 rounded-md p-6 bg-void">
       <div className="flex items-baseline justify-between gap-4 flex-wrap">
         <div>
           <MonoLabel className="block">From your CV — {sug.filename}</MonoLabel>
@@ -91,7 +91,7 @@ export default function CvSuggestions({ onClaimed }: { onClaimed?: (names: strin
             type="button"
             onClick={claimAll}
             disabled={claimAllRunning}
-            className="inline-flex items-center gap-2 bg-ink text-canvas rounded-full px-5 py-2 text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-40 self-start"
+            className="inline-flex items-center gap-2 bg-brand-cyan text-canvas rounded-full px-5 py-2 text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-40 self-start"
           >
             {claimAllRunning ? (
               <>
@@ -107,7 +107,7 @@ export default function CvSuggestions({ onClaimed }: { onClaimed?: (names: strin
       <div className="flex flex-wrap gap-2 mt-4">
         {sug.suggested.map((name) => (
           <button key={name} type="button" onClick={() => claim(name)} disabled={claiming !== null || claimAllRunning}
-            className="inline-flex items-center gap-2 border border-ink rounded-full px-4 py-1.5 text-sm hover:bg-ink hover:text-canvas transition-colors disabled:opacity-40">
+            className="inline-flex items-center gap-2 border border-white/10 rounded-full px-4 py-1.5 text-sm hover:bg-brand-cyan hover:text-canvas transition-colors disabled:opacity-40">
             + {name}
             {claiming === name && <Spinner />}
           </button>
@@ -129,3 +129,4 @@ export default function CvSuggestions({ onClaimed }: { onClaimed?: (names: strin
     </section>
   );
 }
+

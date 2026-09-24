@@ -91,7 +91,7 @@ function SubmitForm({ onStarted }: { onStarted: (id: string) => void }) {
   }
 
   const inputCls =
-    "w-full border border-hairline rounded-md px-3 py-2 text-sm bg-canvas text-ink focus:outline-none focus:border-ink";
+    "w-full border border-white/10 rounded-md px-3 py-2 text-sm bg-void text-white focus:outline-none focus:border-white/10";
 
   return (
     <form onSubmit={submit} className="max-w-xl">
@@ -104,9 +104,9 @@ function SubmitForm({ onStarted }: { onStarted: (id: string) => void }) {
         <div>
           <MonoLabel className="block mb-1.5">CV — PDF, DOCX, TXT or MD (max 10 MB)</MonoLabel>
           {cv ? (
-            <div className="flex items-center justify-between border border-hairline rounded-md px-3 py-2 bg-canvas">
-              <span className="text-sm text-ink">
-                <span className="text-brand-green">✓</span> {cv.filename}
+            <div className="flex items-center justify-between border border-white/10 rounded-md px-3 py-2 bg-void">
+              <span className="text-sm text-white">
+                <span className="text-brand-cyan">✓</span> {cv.filename}
                 <span className="text-muted"> · {(cv.size / 1024).toFixed(0)} KB — skills will be read from it</span>
               </span>
               <button type="button" onClick={() => setCv(null)} className="text-sm text-error-red underline underline-offset-4">
@@ -114,7 +114,7 @@ function SubmitForm({ onStarted }: { onStarted: (id: string) => void }) {
               </button>
             </div>
           ) : (
-            <label className="block border border-dashed border-hairline rounded-md px-3 py-4 text-center cursor-pointer hover:border-ink transition-colors">
+            <label className="block border-2 border-dashed border-brand-cyan/40 bg-brand-cyan/5 rounded-xl px-3 py-10 text-center cursor-pointer hover:border-brand-cyan hover:bg-brand-cyan/10 hover:shadow-[0_0_20px_rgba(80,223,251,0.2)] transition-all duration-300 group">
               <span className="text-sm text-muted">{cvBusy ? "Uploading…" : "Click to choose a file"}</span>
               <input type="file" accept=".pdf,.docx,.txt,.md,application/pdf,text/plain,text/markdown" className="hidden"
                 onChange={pickCv} disabled={cvBusy} />
@@ -139,7 +139,7 @@ function SubmitForm({ onStarted }: { onStarted: (id: string) => void }) {
       </div>
       {error && <div className="mt-4"><Notice kind="error">{error}</Notice></div>}
       <button type="submit" disabled={busy}
-        className="mt-6 bg-brand-green text-white rounded-full px-8 py-2.5 text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50">
+        className="mt-6 bg-gradient-brand text-white rounded-full px-8 py-2.5 text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50">
         {busy ? "Starting…" : "Run readiness check"}
       </button>
       <p className="text-micro text-muted-2 mt-3">
@@ -160,10 +160,10 @@ function Progress({ check }: { check: ProfileCheck }) {
   const idx = STAGES.indexOf(check.status as (typeof STAGES)[number]);
   const stage = check.status === "failed" ? -1 : idx;
   return (
-    <div className="border border-hairline rounded-md p-8 max-w-xl">
+    <div className="border border-white/10 rounded-md p-8 max-w-xl">
       <div className="flex items-center gap-3">
         <Spinner />
-        <p className="text-ink font-medium">
+        <p className="text-white font-medium">
           {check.status === "pending" && "Queued…"}
           {check.status === "fetching" && "Fetching your sources…"}
           {check.status === "evaluating" && "Scoring your readiness…"}
@@ -173,8 +173,8 @@ function Progress({ check }: { check: ProfileCheck }) {
       <div className="flex gap-2 mt-6" aria-hidden>
         {STAGES.slice(0, 3).map((s, i) => (
           <div key={s} className="flex-1">
-            <div className={`h-1 rounded-full ${i <= stage ? "bg-brand-green" : "bg-hairline"}`} />
-            <p className={`font-mono text-micro mt-2 ${i <= stage ? "text-ink" : "text-muted-2"}`}>
+            <div className={`h-1 rounded-full ${i <= stage ? "bg-gradient-brand" : "bg-hairline"}`} />
+            <p className={`font-mono text-micro mt-2 ${i <= stage ? "text-white" : "text-muted-2"}`}>
               {s.toUpperCase()}
             </p>
           </div>
@@ -205,7 +205,7 @@ function SourceRow({ s }: { s: ProfileCheck["sources"][number] }) {
     return (
       <div className="flex items-center gap-3 py-2">
         <Chip tone="green">ok</Chip>
-        <span className="text-ink font-medium">{label}</span>
+        <span className="text-white font-medium">{label}</span>
         <span className="text-sm text-muted">{detail}</span>
       </div>
     );
@@ -219,7 +219,7 @@ function SourceRow({ s }: { s: ProfileCheck["sources"][number] }) {
       <div className="py-2">
         <div className="flex items-center gap-3">
           <Chip tone="coral">failed</Chip>
-          <span className="text-ink font-medium">{label}</span>
+          <span className="text-white font-medium">{label}</span>
           <span className="text-sm text-muted">{detail} <code className="font-mono text-micro">({s.error_code})</code></span>
         </div>
       </div>
@@ -228,7 +228,7 @@ function SourceRow({ s }: { s: ProfileCheck["sources"][number] }) {
   return (
     <div className="flex items-center gap-3 py-2">
       <Chip tone="neutral">skipped</Chip>
-      <span className="text-ink font-medium">{label}</span>
+      <span className="text-white font-medium">{label}</span>
       <span className="text-sm text-muted">not supplied</span>
     </div>
   );
@@ -256,7 +256,7 @@ function Verdict({
   return (
     <div>
       {/* Score band */}
-      <section className="bg-brand-green rounded-md p-10 text-white">
+      <section className="bg-gradient-brand rounded-md p-10 text-white">
         <div className="flex flex-col md:flex-row md:items-end gap-8">
           <div>
             <MonoLabel className="block text-white/60 mb-2">Readiness score</MonoLabel>
@@ -311,7 +311,7 @@ function Verdict({
       {/* Per-source honesty */}
       <section className="mt-12">
         <MonoLabel className="block mb-3">Per-source status</MonoLabel>
-        <div className="border border-hairline rounded-md divide-y divide-hairline bg-canvas">
+        <div className="border border-white/10 rounded-md divide-y divide-hairline bg-void">
           {check.sources.map((s) => <SourceRow key={s.source} s={s} />)}
         </div>
       </section>
@@ -323,11 +323,11 @@ function Verdict({
           {dims.map((d) => (
             <div key={d.key}>
               <div className="flex items-baseline justify-between mb-1">
-                <p className="text-ink font-medium">{d.label}</p>
+                <p className="text-white font-medium">{d.label}</p>
                 <p className="font-mono text-sm text-muted">{d.points}/{d.max}</p>
               </div>
               <div className="h-1.5 bg-hairline rounded-full overflow-hidden">
-                <div className="h-full bg-brand-green rounded-full"
+                <div className="h-full bg-gradient-brand rounded-full"
                   style={{ width: `${d.max ? Math.round((d.points / d.max) * 100) : 0}%` }} />
               </div>
               {d.signals.length > 0 && (
@@ -345,15 +345,15 @@ function Verdict({
       {/* Skill audit + next actions */}
       <CvSuggestions onClaimed={() => onClaimsChanged()} />
       {claimsSinceCheck > 0 && (
-        <div className="mt-4 border border-ink rounded-md p-5 bg-canvas flex items-center justify-between gap-4 flex-wrap">
-          <p className="text-sm text-ink">
+        <div className="mt-4 border border-white/10 rounded-md p-5 bg-void flex items-center justify-between gap-4 flex-wrap">
+          <p className="text-sm text-white">
             <span className="font-medium">
               {claimsSinceCheck} skill{claimsSinceCheck === 1 ? "" : "s"} claimed
             </span>{" "}
             since this check — re-run to fold them into your score.
           </p>
           <button onClick={onRerun} disabled={rerunning}
-            className="border border-ink rounded-full px-5 py-2 text-sm hover:bg-ink hover:text-canvas transition-colors disabled:opacity-50">
+            className="border border-white/10 rounded-full px-5 py-2 text-sm hover:bg-brand-cyan hover:text-canvas transition-colors disabled:opacity-50">
             {rerunning ? "Starting…" : "Re-run check"}
           </button>
         </div>
@@ -361,10 +361,10 @@ function Verdict({
       <section className="mt-12 grid md:grid-cols-2 gap-8">
         <div>
           <MonoLabel className="block mb-3">Skill audit</MonoLabel>
-          <div className="border border-hairline rounded-md p-6 bg-canvas">
+          <div className="border border-white/10 rounded-md p-6 bg-void">
             {result.skill_audit ? (
               <>
-                <p className="text-ink">
+                <p className="text-white">
                   <span className="font-display text-2xl">{result.skill_audit.evidenced}</span> evidenced
                   &nbsp;·&nbsp; <span className="font-display text-2xl">{result.skill_audit.self_declared}</span> self-declared
                 </p>
@@ -381,12 +381,12 @@ function Verdict({
         </div>
         <div>
           <MonoLabel className="block mb-3">Run details</MonoLabel>
-          <div className="border border-hairline rounded-md p-6 bg-canvas text-sm text-muted space-y-1">
+          <div className="border border-white/10 rounded-md p-6 bg-void text-sm text-muted space-y-1">
             <p>Attempt #{check.attempts} · evaluator <code className="font-mono">{result.result.evaluator}</code></p>
             <p>Pipeline took {(((result.duration_ms ?? 0) as number) / 1000).toFixed(1)}s · raw score before cap: {result.result.readiness_raw}</p>
           </div>
           <button onClick={onRerun} disabled={rerunning}
-            className="mt-4 border border-ink rounded-full px-6 py-2 text-sm hover:bg-ink hover:text-canvas transition-colors disabled:opacity-50">
+            className="mt-4 border border-white/10 rounded-full px-6 py-2 text-sm hover:bg-brand-cyan hover:text-canvas transition-colors disabled:opacity-50">
             {rerunning ? "Starting…" : "Re-run check"}
           </button>
         </div>
@@ -530,7 +530,7 @@ function AnalyzeInner() {
 
           {/* A completed check exists — offer a new submission below it. */}
           {check && check.status === "completed" && (
-            <section className="mt-16 border-t border-hairline pt-10">
+            <section className="mt-16 border-t border-white/10 pt-10">
               <MonoLabel className="block mb-4">New check</MonoLabel>
               <SubmitForm
                 onStarted={async (id) => {
@@ -543,7 +543,7 @@ function AnalyzeInner() {
 
           {/* Failed/in-flight checks can also be re-submitted */}
           {check && (IN_FLIGHT.has(check.status) || check.status === "failed") && (
-            <section className="mt-16 border-t border-hairline pt-10">
+            <section className="mt-16 border-t border-white/10 pt-10">
               <MonoLabel className="block mb-4">Start a different check</MonoLabel>
               <SubmitForm
                 onStarted={async (id) => {
@@ -571,3 +571,5 @@ export default function AnalyzePage() {
     </AppShell>
   );
 }
+
+

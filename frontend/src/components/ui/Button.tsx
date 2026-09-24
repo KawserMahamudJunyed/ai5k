@@ -15,8 +15,8 @@ const base =
 const variants: Record<Variant, string> = {
   // Near-black on light; white on dark surfaces (parent overrides text/bg via className).
   primary: "bg-near-black text-white hover:bg-black",
-  outline: "border border-ink text-ink hover:bg-ink/5 rounded-xl",
-  ghost: "text-ink underline underline-offset-4 decoration-hairline hover:decoration-ink",
+  outline: "border border-white/10 text-white hover:bg-brand-cyan/5 rounded-xl",
+  ghost: "text-white underline underline-offset-4 decoration-hairline hover:decoration-ink",
   danger: "border border-error-red/40 text-error-red hover:bg-error-red/5",
 };
 

@@ -5,6 +5,7 @@
 // Built on <details> so it opens on click AND hover without JS state.
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 
@@ -37,10 +38,10 @@ export default function AppHeader() {
     pathname.startsWith("/profile/me") || pathname.startsWith("/settings");
 
   return (
-    <header className="sticky top-0 z-40 bg-canvas/95 backdrop-blur border-b border-hairline">
+    <header className="sticky top-0 z-40 bg-void/95 backdrop-blur border-b border-white/10">
       <div className="max-w-shell mx-auto px-6 h-16 flex items-center gap-8">
         <Link href="/dashboard" className="flex items-center gap-2 shrink-0">
-          <span className="font-display font-semibold text-ink tracking-tight">AI5K</span>
+          <Image src="/assets/logo.png" alt="AI5K Logo" width={100} height={28} className="h-7 w-auto object-contain" priority />
         </Link>
 
         <nav className="hidden md:flex items-center gap-1 flex-1" aria-label="Main">
@@ -53,7 +54,7 @@ export default function AppHeader() {
                 href={link.href}
                 aria-current={active ? "page" : undefined}
                 className={`px-3 py-2 rounded-sm text-sm transition-colors ${
-                  active ? "text-ink bg-stone" : "text-muted hover:text-ink hover:bg-stone/60"
+                  active ? "text-white bg-navy" : "text-muted hover:text-white hover:bg-navy/60"
                 }`}
               >
                 {link.label}
@@ -68,15 +69,15 @@ export default function AppHeader() {
             className="list-none cursor-pointer flex items-center gap-3"
             aria-label="Profile settings menu"
           >
-            <span className="hidden sm:block text-sm text-muted group-hover:text-ink transition-colors">
+            <span className="hidden sm:block text-sm text-muted group-hover:text-white transition-colors">
               {user?.full_name}
             </span>
-            <span className="w-9 h-9 rounded-full bg-brand-green text-white flex items-center justify-center text-xs font-medium">
+            <span className="w-9 h-9 rounded-full bg-gradient-brand text-white flex items-center justify-center text-xs font-medium">
               {initials}
             </span>
           </summary>
           <div
-            className="absolute right-0 top-full mt-2 w-60 bg-canvas border border-hairline rounded-md shadow-sm py-2 z-50"
+            className="absolute right-0 top-full mt-2 w-60 bg-void border border-white/10 rounded-md shadow-sm py-2 z-50"
             onMouseLeave={(e) => (e.currentTarget.closest("details") as HTMLDetailsElement | null)?.removeAttribute("open")}
           >
             <p className="px-4 pt-1 pb-2 text-micro font-mono uppercase tracking-[0.28px] text-muted">
@@ -88,17 +89,17 @@ export default function AppHeader() {
                 href={l.href}
                 onClick={(e) => (e.currentTarget.closest("details") as HTMLDetailsElement | null)?.removeAttribute("open")}
                 className={`block px-4 py-2 text-sm transition-colors ${
-                  pathname === l.href ? "text-ink bg-stone" : "text-muted hover:text-ink hover:bg-stone/60"
+                  pathname === l.href ? "text-white bg-navy" : "text-muted hover:text-white hover:bg-navy/60"
                 }`}
               >
                 {l.label}
               </Link>
             ))}
-            <div className="border-t border-hairline mt-2 pt-2">
+            <div className="border-t border-white/10 mt-2 pt-2">
               <button
                 type="button"
                 onClick={logout}
-                className="w-full text-left px-4 py-2 text-sm text-error-red hover:bg-stone/60"
+                className="w-full text-left px-4 py-2 text-sm text-error-red hover:bg-navy/60"
               >
                 Log out
               </button>
@@ -109,7 +110,7 @@ export default function AppHeader() {
 
       {/* Mobile nav — dashboard first, then the settings sections inline */}
       <nav
-        className={`md:hidden flex gap-1 overflow-x-auto px-4 pb-2 ${isSettingsArea ? "" : "border-t border-hairline"}`}
+        className={`md:hidden flex gap-1 overflow-x-auto px-4 pb-2 ${isSettingsArea ? "" : "border-t border-white/10"}`}
         aria-label="Mobile"
       >
         {[...MAIN_LINKS, ...SETTINGS_LINKS].map((link) => {

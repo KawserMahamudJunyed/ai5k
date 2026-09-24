@@ -37,9 +37,9 @@ interface DashboardData {
 
 function Stat({ label, value, sub, href }: { label: string; value: string | number; sub?: string; href: string }) {
   return (
-    <Link href={href} className="group border-t-2 border-ink pt-4 block">
+    <Link href={href} className="group border-t-2 border-white/10 pt-4 block">
       <MonoLabel className="block mb-2">{label}</MonoLabel>
-      <p className="text-5xl font-display text-ink leading-none group-hover:text-brand-green transition-colors">{value}</p>
+      <p className="text-5xl font-display text-white leading-none group-hover:text-brand-cyan transition-colors">{value}</p>
       {sub && <p className="text-sm text-muted mt-2">{sub}</p>}
     </Link>
   );
@@ -149,7 +149,7 @@ function DashboardInner() {
       {invitations.length > 0 && (
         <Link href="/organizations/invitations"
           className="block p-4 rounded-sm border border-coral/40 bg-coral/5 hover:bg-coral/10 transition-colors mb-12">
-          <span className="text-ink font-medium">
+          <span className="text-white font-medium">
             {invitations.length} pending organization invitation{invitations.length > 1 ? "s" : ""}
           </span>
           <span className="text-muted text-sm ml-2">— review and respond →</span>
@@ -160,18 +160,18 @@ function DashboardInner() {
       <section className="mb-16">
         <MonoLabel className="block mb-4">Next steps</MonoLabel>
         {steps.length === 0 ? (
-          <div className="border-t-2 border-ink pt-4">
-            <p className="text-ink font-medium">Profile complete — everything is in place.</p>
+          <div className="border-t-2 border-white/10 pt-4">
+            <p className="text-white font-medium">Profile complete — everything is in place.</p>
             <p className="text-muted text-sm mt-1">
               Keep strengthening your evidence, or run an analysis when the pipeline lands.
             </p>
           </div>
         ) : (
-          <ul className="divide-y divide-hairline border-t border-hairline">
+          <ul className="divide-y divide-hairline border-t border-white/10">
             {steps.map((s) => (
               <li key={s.title} className="py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
-                  <p className="text-ink font-medium">{s.title}</p>
+                  <p className="text-white font-medium">{s.title}</p>
                   <p className="text-sm text-muted mt-0.5">{s.body}</p>
                 </div>
                 <ButtonLink href={s.href} variant="outline" className="shrink-0">{s.cta}</ButtonLink>
@@ -194,7 +194,7 @@ function DashboardInner() {
             { href: "/analyze", label: "Analysis" },
           ].map((l) => (
             <Link key={l.href} href={l.href}
-              className="border border-hairline rounded-sm px-5 py-4 text-ink hover:bg-stone transition-colors flex items-center justify-between">
+              className="border border-white/10 rounded-sm px-5 py-4 text-white hover:bg-navy transition-colors flex items-center justify-between">
               <span>{l.label}</span>
               <span className="text-muted">→</span>
             </Link>

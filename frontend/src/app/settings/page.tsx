@@ -32,7 +32,7 @@ const ACCOUNT_ITEMS = [
 ];
 
 const inputCls =
-  "w-full border border-hairline rounded-md px-3 py-2 text-sm bg-canvas text-ink focus:outline-none focus:border-ink";
+  "w-full border border-white/10 rounded-md px-3 py-2 text-sm bg-void text-white focus:outline-none focus:border-white/10";
 
 function ChangePasswordForm() {
   const [current, setCurrent] = useState("");
@@ -69,7 +69,7 @@ function ChangePasswordForm() {
 
   return (
     <form onSubmit={submit} className="py-4">
-      <p className="text-ink font-medium">Change password</p>
+      <p className="text-white font-medium">Change password</p>
       <p className="text-sm text-muted mt-0.5 mb-3">You'll need your current password to set a new one.</p>
       <div className="grid sm:grid-cols-3 gap-3 max-w-2xl">
         <input
@@ -106,7 +106,7 @@ function ChangePasswordForm() {
       <button
         type="submit"
         disabled={busy}
-        className="mt-3 text-sm border border-ink rounded-full px-5 py-1.5 hover:bg-ink hover:text-canvas transition-colors disabled:opacity-50"
+        className="mt-3 text-sm border border-white/10 rounded-full px-5 py-1.5 hover:bg-brand-cyan hover:text-canvas transition-colors disabled:opacity-50"
       >
         {busy ? "Updating…" : "Update password"}
       </button>
@@ -146,9 +146,9 @@ function ChangeEmailForm() {
 
   return (
     <form onSubmit={submit} className="py-4">
-      <p className="text-ink font-medium">Change email</p>
+      <p className="text-white font-medium">Change email</p>
       <p className="text-sm text-muted mt-0.5 mb-3">
-        Current: <span className="text-ink">{user?.email}</span> — confirmed by your password.
+        Current: <span className="text-white">{user?.email}</span> — confirmed by your password.
       </p>
       <div className="grid sm:grid-cols-[1fr_1fr_auto] gap-3 items-end max-w-2xl">
         <input
@@ -172,7 +172,7 @@ function ChangeEmailForm() {
         <button
           type="submit"
           disabled={busy}
-          className="text-sm border border-ink rounded-full px-5 py-2 hover:bg-ink hover:text-canvas transition-colors disabled:opacity-50 whitespace-nowrap"
+          className="text-sm border border-white/10 rounded-full px-5 py-2 hover:bg-brand-cyan hover:text-canvas transition-colors disabled:opacity-50 whitespace-nowrap"
         >
           {busy ? "Updating…" : "Update email"}
         </button>
@@ -203,14 +203,14 @@ function SettingsInner() {
       {error && <div className="mb-8"><Notice kind="error">{error}</Notice></div>}
 
       {/* Identity card */}
-      <section className="border border-hairline rounded-md p-6 mb-12 bg-canvas">
+      <section className="border border-white/10 rounded-md p-6 mb-12 bg-void">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-brand-green text-white flex items-center justify-center font-medium">
+            <div className="w-12 h-12 rounded-full bg-gradient-brand text-white flex items-center justify-center font-medium">
               {(user?.full_name ?? "?").split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase()}
             </div>
             <div>
-              <p className="text-ink font-medium">{user?.full_name}</p>
+              <p className="text-white font-medium">{user?.full_name}</p>
               <p className="text-sm text-muted">{user?.email}</p>
             </div>
           </div>
@@ -218,7 +218,7 @@ function SettingsInner() {
         </div>
         {profile && (
           <p className="text-sm text-muted mt-4">
-            Profile: <span className="text-ink">{profile.display_name}</span> ·{" "}
+            Profile: <span className="text-white">{profile.display_name}</span> ·{" "}
             <Chip tone={profile.visibility === "public" ? "green" : "neutral"}>{profile.visibility}</Chip>{" "}
             <Link href={`/profiles/${profile.id}`} className="text-blue underline underline-offset-4 ml-1">view public page</Link>
           </p>
@@ -238,10 +238,10 @@ function SettingsInner() {
         <div className="grid md:grid-cols-2 gap-4">
           {CAPABILITY_SECTIONS.map((s) => (
             <Link key={s.href} href={s.href}
-              className="group border border-hairline rounded-md p-6 hover:border-ink transition-colors bg-canvas">
+              className="group border border-white/10 rounded-md p-6 hover:border-white/10 transition-colors bg-void">
               <div className="flex items-center justify-between">
-                <h2 className="text-feature-heading font-display text-ink">{s.title}</h2>
-                <span className="text-muted group-hover:text-ink">→</span>
+                <h2 className="text-feature-heading font-display text-white">{s.title}</h2>
+                <span className="text-muted group-hover:text-white">→</span>
               </div>
               <p className="text-sm text-muted mt-2">{s.body}</p>
             </Link>
@@ -252,15 +252,15 @@ function SettingsInner() {
       {/* Account */}
       <section>
         <MonoLabel className="block mb-4">Account</MonoLabel>
-        <div className="border-t border-hairline divide-y divide-hairline">
+        <div className="border-t border-white/10 divide-y divide-hairline">
           {ACCOUNT_ITEMS.map((i) => (
             <div key={i.title} className="py-4">
-              <p className="text-ink font-medium">{i.title}</p>
+              <p className="text-white font-medium">{i.title}</p>
               <p className="text-sm text-muted mt-0.5">{i.body}</p>
             </div>
           ))}
           <div className="py-4 flex items-center justify-between">
-            <p className="text-ink font-medium">Log out</p>
+            <p className="text-white font-medium">Log out</p>
             <button type="button" onClick={logout} className="text-sm text-error-red underline underline-offset-4">
               Log out of this device
             </button>
@@ -271,7 +271,7 @@ function SettingsInner() {
       {/* Security */}
       <section className="mt-12">
         <MonoLabel className="block mb-4">Security</MonoLabel>
-        <div className="border-t border-hairline divide-y divide-hairline">
+        <div className="border-t border-white/10 divide-y divide-hairline">
           <ChangeEmailForm />
           <ChangePasswordForm />
         </div>
