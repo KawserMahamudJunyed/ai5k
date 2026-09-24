@@ -13,6 +13,8 @@ __pycache__/
 .venv/
 venv/
 env/
+
+# ---- Testing / tooling caches ----
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/

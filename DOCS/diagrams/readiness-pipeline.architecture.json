@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "AI5K Readiness Pipeline",
+    "output": "readiness-pipeline.architecture.html",
+    "quality_profile": "showcase",
+    "views": [
+      { "id": "submit-path", "label": "Submit and poll", "focus": ["user", "frontend", "api", "pipeline", "db"], "note": "A check is submitted as 202 with a poll URL; the UI polls every 2s until the verdict lands." },
+      { "id": "source-fetching", "label": "Source fetching", "focus": ["pipeline", "github", "searchtool", "cvstore"], "note": "The backend fetches each source itself: GitHub live, Upwork/Fiverr via the search tool, the CV from disk." },
+      { "id": "storage", "label": "Where data lands", "focus": ["api", "db", "cvstore"], "note": "All raw payloads, results, and CV bytes live in the backend's own storage." }
+    ],
+    "repository": {
+      "url": "https://github.com/CloudCampBD/ai5k",
+      "provider": "github",
+      "revision": "bba5d5e9eaa35ece1748efc645b84cc8d8158e92",
+      "link_mode": "web"
+    },
+    "viewBox": [1180, 660]
+  },
+  "components": [
+    { "id": "user", "type": "external", "label": "Freelancer", "sublabel": "browser", "pos": [40, 300], "size": [130, 60], "sources": [{ "path": "frontend/src/app/analyze/page.tsx", "label": "submit form" }] },
+    { "id": "frontend", "type": "frontend", "label": "Next.js /analyze", "sublabel": "submit · poll · verdict", "pos": [260, 298], "size": [150, 64], "sources": [{ "path": "frontend/src/app/analyze/page.tsx" }, { "path": "frontend/src/lib/api-helpers.ts", "label": "API helpers" }] },
+    { "id": "api", "type": "backend", "label": "FastAPI /profile-checks", "sublabel": "202 + poll URL", "pos": [480, 298], "size": [160, 64], "sources": [{ "path": "backend/app/api/v1/profile_checks.py", "label": "router" }] },
+    { "id": "pipeline", "type": "backend", "label": "Readiness pipeline", "sublabel": "fetch → evaluate → score", "tag": "BackgroundTask", "pos": [710, 298], "size": [160, 64], "sources": [{ "path": "backend/app/services/profile_check.py", "label": "service" }] },
+    { "id": "github", "type": "external", "label": "GitHub API", "sublabel": "live fetch · 1h cache", "tag": "GITHUB_TOKEN", "pos": [710, 110], "size": [150, 60], "sources": [{ "path": "backend/app/services/profile_check.py", "label": "_fetch_github" }] },
+    { "id": "searchtool", "type": "external", "label": "ai-backend search", "sublabel": "search_everywhere", "tag": "Upwork / Fiverr", "pos": [930, 110], "size": [160, 60], "sources": [{ "path": "ai-backend/test.py", "label": "search_everywhere" }] },
+    { "id": "cvstore", "type": "database", "label": "CV store", "sublabel": "var/cv_uploads/{user}", "tag": "PDF DOCX MD TXT", "pos": [710, 470], "size": [150, 60], "sources": [{ "path": "backend/app/services/profile_check.py", "label": "store_cv" }] },
+    { "id": "db", "type": "database", "label": "PostgreSQL", "sublabel": "checks · sources · results", "pos": [940, 298], "size": [150, 64], "sources": [{ "path": "backend/app/models/profile_check.py", "label": "3 models" }] }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "AI5K monorepo", "wraps": ["frontend", "api", "pipeline", "cvstore", "db"] }
+  ],
+  "connections": [
+    { "id": "user-to-frontend", "from": "user", "to": "frontend", "label": "uploads CV + URLs", "variant": "emphasis" },
+    { "id": "frontend-to-api", "from": "frontend", "to": "api", "label": "POST /profile-checks (202)", "labelDy": -60 },
+    { "id": "api-to-pipeline", "from": "api", "to": "pipeline", "label": "BackgroundTasks", "variant": "dashed", "labelDy": -60 },
+    { "id": "pipeline-to-db", "from": "pipeline", "to": "db", "label": "writes status + raw payloads", "labelDy": 44 },
+    { "id": "pipeline-to-github", "from": "pipeline", "to": "github", "label": "users + repos", "fromSide": "top", "toSide": "bottom", "labelDy": -46 },
+    { "id": "pipeline-to-searchtool", "from": "pipeline", "to": "searchtool", "label": "invoked as a tool", "fromSide": "right", "toSide": "left", "labelDy": -14 },
+    { "id": "pipeline-to-cvstore", "from": "pipeline", "to": "cvstore", "label": "extract + score text", "fromSide": "bottom", "toSide": "top" },
+    { "id": "frontend-poll", "from": "frontend", "to": "api", "label": "poll every 2s", "variant": "dashed" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Contract", "items": ["POST → 202 {id, poll_url}", "UI polls GET /profile-checks/{id} every 2s"] },
+    { "dot": "emerald", "title": "Backend owns data", "items": ["Raw payloads stored in profile_check_sources", "CV text extracted server-side (pypdf / docx2txt)", "ai-backend invoked as a tool, never bypasses the API"] },
+    { "dot": "rose", "title": "Honest failure", "items": ["Per-source ok / failed / skipped", "Score held at 30 without evidenced claims (evidence cap)"] }
+  ]
+}

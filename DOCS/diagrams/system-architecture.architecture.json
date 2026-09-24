@@ -1,0 +1,393 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "AI5K System Architecture",
+    "output": "system-architecture.html",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "request-path",
+        "label": "Request path",
+        "focus": [
+          "user",
+          "frontend",
+          "api",
+          "db"
+        ],
+        "note": "Every browser call is REST over /api/v1 with a JWT bearer token; the FastAPI backend owns all data."
+      },
+      {
+        "id": "verification-loop",
+        "label": "Verification loop",
+        "focus": [
+          "admin",
+          "frontend",
+          "api",
+          "db"
+        ],
+        "note": "A reviewer approves or rejects once; approval flips the claim to evidenced and the evidence to verified."
+      },
+      {
+        "id": "readiness-sources",
+        "label": "Readiness sources",
+        "focus": [
+          "pipeline",
+          "github",
+          "searchtool",
+          "cvstore"
+        ],
+        "note": "The background pipeline fetches GitHub live, corroborates Upwork/Fiverr through the search tool, and scores the CV from disk."
+      }
+    ],
+    "repository": {
+      "url": "https://github.com/CloudCampBD/ai5k",
+      "provider": "github",
+      "revision": "bba5d5e9eaa35ece1748efc645b84cc8d8158e92",
+      "link_mode": "web"
+    },
+    "viewBox": [
+      1150,
+      596
+    ]
+  },
+  "components": [
+    {
+      "id": "user",
+      "type": "external",
+      "label": "Freelancer",
+      "sublabel": "browser",
+      "pos": [
+        40,
+        264
+      ],
+      "size": [
+        130,
+        60
+      ],
+      "sources": [
+        {
+          "path": "frontend/src/app/dashboard/page.tsx",
+          "label": "post-login home"
+        }
+      ]
+    },
+    {
+      "id": "admin",
+      "type": "external",
+      "label": "Reviewer",
+      "sublabel": "admin role",
+      "pos": [
+        40,
+        404
+      ],
+      "size": [
+        130,
+        60
+      ],
+      "sources": [
+        {
+          "path": "frontend/src/app/admin/verification/page.tsx",
+          "label": "queue UI"
+        }
+      ]
+    },
+    {
+      "id": "frontend",
+      "type": "frontend",
+      "label": "Next.js app",
+      "sublabel": ":3000 \u00b7 App Router",
+      "pos": [
+        270,
+        262
+      ],
+      "size": [
+        160,
+        64
+      ],
+      "sources": [
+        {
+          "path": "frontend/src/lib/api.ts",
+          "label": "fetchWithAuth"
+        }
+      ]
+    },
+    {
+      "id": "api",
+      "type": "backend",
+      "label": "FastAPI /api/v1",
+      "sublabel": ":8000 \u00b7 routers",
+      "pos": [
+        510,
+        262
+      ],
+      "size": [
+        170,
+        64
+      ],
+      "sources": [
+        {
+          "path": "backend/app/main.py",
+          "label": "app wiring"
+        }
+      ]
+    },
+    {
+      "id": "pipeline",
+      "type": "backend",
+      "label": "Readiness pipeline",
+      "sublabel": "fetch \u2192 evaluate \u2192 score",
+      "tag": "BackgroundTask",
+      "pos": [
+        760,
+        262
+      ],
+      "size": [
+        160,
+        64
+      ],
+      "sources": [
+        {
+          "path": "backend/app/services/profile_check.py",
+          "label": "service"
+        }
+      ]
+    },
+    {
+      "id": "auth",
+      "type": "security",
+      "label": "AWS Cognito",
+      "sublabel": "JWT verification",
+      "tag": "optional",
+      "pos": [
+        500,
+        84
+      ],
+      "size": [
+        150,
+        60
+      ],
+      "sources": [
+        {
+          "path": "backend/app/core/config.py",
+          "label": "cognito_configured"
+        }
+      ]
+    },
+    {
+      "id": "github",
+      "type": "external",
+      "label": "GitHub API",
+      "sublabel": "live fetch \u00b7 1h cache",
+      "tag": "GITHUB_TOKEN",
+      "pos": [
+        680,
+        84
+      ],
+      "size": [
+        150,
+        60
+      ],
+      "sources": [
+        {
+          "path": "backend/app/services/profile_check.py",
+          "label": "_fetch_github"
+        }
+      ]
+    },
+    {
+      "id": "searchtool",
+      "type": "external",
+      "label": "ai-backend search",
+      "sublabel": "search_everywhere",
+      "tag": "Upwork / Fiverr",
+      "pos": [
+        860,
+        84
+      ],
+      "size": [
+        170,
+        60
+      ],
+      "sources": [
+        {
+          "path": "ai-backend/test.py",
+          "label": "providers"
+        }
+      ]
+    },
+    {
+      "id": "db",
+      "type": "database",
+      "label": "PostgreSQL",
+      "sublabel": "19 tables \u00b7 asyncpg",
+      "pos": [
+        350,
+        424
+      ],
+      "size": [
+        150,
+        60
+      ],
+      "sources": [
+        {
+          "path": "backend/app/models/__init__.py",
+          "label": "models"
+        }
+      ]
+    },
+    {
+      "id": "cvstore",
+      "type": "database",
+      "label": "CV store",
+      "sublabel": "var/cv_uploads/{user}",
+      "tag": "PDF DOCX MD TXT",
+      "pos": [
+        600,
+        424
+      ],
+      "size": [
+        160,
+        60
+      ],
+      "sources": [
+        {
+          "path": "backend/app/services/profile_check.py",
+          "label": "store_cv"
+        }
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "AI5K monorepo",
+      "wraps": [
+        "frontend",
+        "api",
+        "pipeline",
+        "db",
+        "cvstore"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "user-to-frontend",
+      "from": "user",
+      "to": "frontend",
+      "label": "signup \u00b7 dashboard \u00b7 analyze",
+      "variant": "emphasis",
+      "labelDy": -52
+    },
+    {
+      "id": "admin-to-frontend",
+      "from": "admin",
+      "to": "frontend",
+      "label": "review queue",
+      "labelDy": 52
+    },
+    {
+      "id": "frontend-to-api",
+      "from": "frontend",
+      "to": "api",
+      "label": "REST /api/v1 \u00b7 JWT bearer",
+      "labelDy": -60
+    },
+    {
+      "id": "api-to-auth",
+      "from": "api",
+      "to": "auth",
+      "label": "verify JWT",
+      "variant": "security",
+      "fromSide": "top",
+      "toSide": "bottom"
+    },
+    {
+      "id": "api-to-pipeline",
+      "from": "api",
+      "to": "pipeline",
+      "label": "BackgroundTasks",
+      "variant": "dashed",
+      "labelDy": -60
+    },
+    {
+      "id": "api-to-db",
+      "from": "api",
+      "to": "db",
+      "label": "asyncpg SQL",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "api-to-cvstore",
+      "from": "api",
+      "to": "cvstore",
+      "label": "saves CV uploads",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "pipeline-to-db",
+      "from": "pipeline",
+      "to": "db",
+      "label": "writes status + results",
+      "fromSide": "bottom",
+      "toSide": "bottom",
+      "labelDy": 40
+    },
+    {
+      "id": "pipeline-to-github",
+      "from": "pipeline",
+      "to": "github",
+      "label": "users + repos",
+      "fromSide": "top",
+      "toSide": "bottom"
+    },
+    {
+      "id": "pipeline-to-searchtool",
+      "from": "pipeline",
+      "to": "searchtool",
+      "label": "invoked as a tool",
+      "fromSide": "top",
+      "toSide": "bottom"
+    },
+    {
+      "id": "pipeline-to-cvstore",
+      "from": "pipeline",
+      "to": "cvstore",
+      "label": "extract + score",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelDx": 14
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Request path",
+      "items": [
+        "Next.js :3000 talks only to FastAPI :8000 over /api/v1",
+        "JWT bearer on every call; Cognito verification when configured, local tokens otherwise"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Backend owns data",
+      "items": [
+        "All reads/writes go through the API \u2014 19 tables in PostgreSQL",
+        "CV bytes land in var/cv_uploads; text is extracted server-side",
+        "ai-backend is invoked as a tool, never as a bypass around the API"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Honest failure",
+      "items": [
+        "Readiness sources report ok / failed / skipped with machine error codes",
+        "Verification is decision-once; approval flips claim and evidence tiers",
+        "Score held at 30 until a claim is admin-evidenced"
+      ]
+    }
+  ]
+}
