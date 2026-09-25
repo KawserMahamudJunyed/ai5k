@@ -18,6 +18,8 @@ import {
   listMyOrganizations,
   listServices,
   listSkillClaims,
+  getLatestProfileCheck,
+  type ProfileCheck,
   type EvidenceRead,
   type Invitation,
   type Organization,
@@ -67,8 +69,8 @@ function DashboardInner() {
           if (!(err instanceof ApiError && err.status === 404)) throw err;
           // no profile yet — everything else still loads
         }
-        const [orgs, invitations] = await Promise.all([listMyOrganizations(), listMyInvitations()]);
-        setData({ profile, claims, evidence, services, orgs, invitations });
+        const [orgs, invitations, latestCheck] = await Promise.all([listMyOrganizations(), listMyInvitations(), getLatestProfileCheck()]);
+        setData({ profile, claims, evidence, services, orgs, invitations, latestCheck });
       } catch (err) {
         setError(describeApiError(err));
       }
@@ -86,7 +88,7 @@ function DashboardInner() {
     return <div className="flex justify-center py-24"><Spinner /></div>;
   }
 
-  const { profile, claims, evidence, services, orgs, invitations } = data;
+  const { profile, claims, evidence, services, orgs, invitations, latestCheck } = data;
   const evidenced = claims.filter((c) => c.claim_type === "evidenced").length;
   const pendingEvidence = evidence.filter((e) => e.verification_status === "pending").length;
 
@@ -131,18 +133,42 @@ function DashboardInner() {
 
   return (
     <main className="max-w-shell mx-auto px-6 py-12">
-      <PageHeader
-        eyebrow="Dashboard"
-        title={`Welcome${profile ? `, ${profile.display_name}` : ""}`}
-        lede="Your capability at a glance — build it up, prove it, and pursue global opportunities."
-      />
+      <div className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <PageHeader
+          eyebrow="Command Center"
+          title={`Welcome${profile ? `, ${profile.display_name}` : ""}`}
+          lede="Your verified capability baseline. Prove your skills and unlock global opportunities."
+        />
+        
+        {latestCheck && latestCheck.status === 'completed' && latestCheck.result && (
+          <div className="bg-surface-elevated/50 border border-brand-cyan/30 rounded-2xl p-5 backdrop-blur-md min-w-[240px] flex items-center justify-between group cursor-pointer hover:border-brand-cyan/80 hover:bg-brand-cyan/5 transition-all shadow-[0_0_15px_rgba(80,223,251,0.15)] relative overflow-hidden" onClick={() => window.location.href = '/analyze'}>
+            <div className="absolute top-0 right-0 p-3 opacity-20 group-hover:opacity-100 transition-opacity">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-brand-cyan"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+            </div>
+            <div>
+              <p className="text-xs text-brand-cyan font-mono mb-1 uppercase tracking-wider">Readiness Score</p>
+              <div className="flex items-baseline gap-2">
+                <span className="text-4xl font-display font-bold text-white group-hover:text-brand-cyan transition-colors">{latestCheck.result.readiness}</span>
+                <span className="text-sm text-white/50">/ 100</span>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {(!latestCheck || latestCheck.status !== 'completed') && (
+          <Link href="/analyze" className="btn-shimmer rounded-xl px-6 py-4 flex items-center gap-3 hover:scale-105 transition-transform">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-void"><path d="M2 12h4l3-9 5 18 3-9h5"/></svg>
+            <span className="font-semibold text-void">Run AI Analysis</span>
+          </Link>
+        )}
+      </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-16">
-        <Stat label="Skills claimed" value={claims.length} sub={evidenced > 0 ? `${evidenced} evidenced` : "none evidenced yet"} href="/profile/me/skills" />
-        <Stat label="Evidence" value={evidence.length} sub={pendingEvidence > 0 ? `${pendingEvidence} pending review` : undefined} href="/profile/me/evidence" />
-        <Stat label="Services" value={services.length} href="/profile/me/services" />
-        <Stat label="Organizations" value={orgs.length} href="/organizations" />
+      {/* Innovative Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16">
+        <Stat label="Skills claimed" value={claims.length} sub={evidenced > 0 ? `${evidenced} verified` : "None verified"} href="/profile/me/skills" />
+        <Stat label="Evidence Base" value={evidence.length} sub={pendingEvidence > 0 ? `${pendingEvidence} pending` : "Up to date"} href="/profile/me/evidence" />
+        <Stat label="Active Services" value={services.length} href="/profile/me/services" />
+        <Stat label="Network" value={orgs.length} sub="Agencies" href="/organizations" />
       </div>
 
       {/* Pending invitations */}

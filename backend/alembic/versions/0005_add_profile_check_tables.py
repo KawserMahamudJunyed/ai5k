@@ -45,8 +45,8 @@ def upgrade() -> None:
         sa.Column("error_code", sa.String(length=64), nullable=True),
         sa.Column("error_message", sa.Text(), nullable=True),
         sa.Column("attempts", sa.Integer(), server_default="0", nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False),
+        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False),
     )
     op.create_index("ix_profile_checks_user", "profile_checks", ["user_id"])
 
@@ -67,7 +67,7 @@ def upgrade() -> None:
         sa.Column("error_code", sa.String(length=64), nullable=True),
         sa.Column("error_message", sa.Text(), nullable=True),
         sa.Column("duration_ms", sa.Integer(), nullable=True),
-        sa.Column("fetched_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column("fetched_at", sa.DateTime(timezone=True), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False),
         sa.UniqueConstraint("check_id", "source", name="uq_check_source"),
     )
     op.create_index("ix_profile_check_sources_check", "profile_check_sources", ["check_id"])
@@ -90,7 +90,7 @@ def upgrade() -> None:
         sa.Column("sources_used", sa.JSON(), nullable=False),
         sa.Column("generation_skipped", sa.Boolean(), server_default="false", nullable=False),
         sa.Column("duration_ms", sa.Integer(), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False),
     )
     op.create_index(
         "ix_profile_check_results_check", "profile_check_results", ["check_id"], unique=True

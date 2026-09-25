@@ -25,8 +25,8 @@ def upgrade() -> None:
         sa.Column("full_name", sa.String(length=255), nullable=False),
         sa.Column("avatar_url", sa.String(length=2048), nullable=True),
         sa.Column("status", sa.String(length=32), server_default="pending", nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False),
+        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False),
         sa.UniqueConstraint("email"),
         sa.UniqueConstraint("cognito_sub"),
     )
@@ -42,8 +42,8 @@ def upgrade() -> None:
         sa.Column("website_url", sa.String(length=2048), nullable=True),
         sa.Column("logo_url", sa.String(length=2048), nullable=True),
         sa.Column("status", sa.String(length=32), server_default="active", nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False),
+        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False),
         sa.UniqueConstraint("slug"),
     )
     op.create_index("ix_organizations_slug", "organizations", ["slug"])
@@ -124,7 +124,7 @@ def upgrade() -> None:
             sa.ForeignKey("organizations.id", ondelete="CASCADE"),
             nullable=True,
         ),
-        sa.Column("granted_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column("granted_at", sa.DateTime(timezone=True), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False),
         sa.UniqueConstraint("user_id", "role_id", "organization_id", name="uq_user_role"),
     )
 
@@ -142,7 +142,7 @@ def upgrade() -> None:
         sa.Column("entity_id", postgresql.UUID(as_uuid=True), nullable=True),
         sa.Column("metadata", sa.JSON(), nullable=True),
         sa.Column("ip_address", sa.String(length=64), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False),
     )
     op.create_index("ix_audit_logs_action", "audit_logs", ["action"])
     op.create_index("ix_audit_logs_created_at", "audit_logs", ["created_at"])

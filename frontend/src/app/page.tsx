@@ -102,7 +102,7 @@ export default function LandingPage() {
 
       <footer className="border-t border-white/10">
         <div className="max-w-shell mx-auto px-6 py-10 flex flex-col md:flex-row items-center justify-between gap-4">
-          <Image src="/assets/logo-light.png" alt="AI5K Logo" width={140} height={40} className="h-8 md:h-10 w-auto object-contain" />
+          <Image src="/assets/logo-light.png" alt="AI5K Logo" width={280} height={80} className="h-16 md:h-20 w-auto object-contain" />
           <p className="text-micro text-muted">
             AI5K is designed to help professionals pursue earnings targets — it does not guarantee income.
           </p>

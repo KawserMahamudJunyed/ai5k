@@ -39,8 +39,8 @@ def upgrade() -> None:
             "portfolio_links", sa.JSON(), server_default=sa.text("'[]'"), nullable=False
         ),
         sa.Column("visibility", sa.String(length=32), server_default="private", nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False),
+        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False),
         sa.CheckConstraint(
             "(user_id IS NOT NULL AND organization_id IS NULL)"
             " OR (user_id IS NULL AND organization_id IS NOT NULL)",
@@ -75,7 +75,7 @@ def upgrade() -> None:
         ),
         sa.Column("claim_type", sa.String(length=32), server_default="self_declared", nullable=False),
         sa.Column("proficiency_level", sa.String(length=32), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False),
         sa.UniqueConstraint("profile_id", "skill_id", name="uq_profile_skill"),
     )
 
@@ -93,8 +93,8 @@ def upgrade() -> None:
         sa.Column("rate_type", sa.String(length=32), nullable=False),
         sa.Column("rate_amount", sa.Numeric(12, 2), nullable=False),
         sa.Column("availability_status", sa.String(length=32), server_default="available", nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False),
+        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False),
     )
 
 

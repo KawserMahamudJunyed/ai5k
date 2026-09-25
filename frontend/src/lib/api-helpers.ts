@@ -614,9 +614,13 @@ export async function getProfileCheck(id: string): Promise<ProfileCheck> {
 }
 
 export async function getLatestProfileCheck(): Promise<ProfileCheck | null> {
-  const res = await fetchWithAuth("/profile-checks/latest");
-  if (res.status === 404) return null;
-  return res.json();
+  try {
+    const res = await fetchWithAuth("/profile-checks/latest");
+    return res.json();
+  } catch (err) {
+    if (err instanceof ApiError && err.status === 404) return null;
+    throw err;
+  }
 }
 
 // ---- Account (change password / email) ----

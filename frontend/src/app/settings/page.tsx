@@ -32,7 +32,7 @@ const ACCOUNT_ITEMS = [
 ];
 
 const inputCls =
-  "w-full border border-white/10 rounded-md px-3 py-2 text-sm bg-void text-white focus:outline-none focus:border-white/10";
+  "w-full bg-void border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-brand-cyan focus:ring-1 focus:ring-brand-cyan/50 transition-all placeholder:text-white/20";
 
 function ChangePasswordForm() {
   const [current, setCurrent] = useState("");
@@ -203,33 +203,54 @@ function SettingsInner() {
       {error && <div className="mb-8"><Notice kind="error">{error}</Notice></div>}
 
       {/* Identity card */}
-      <section className="border border-white/10 rounded-md p-6 mb-12 bg-void">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-gradient-brand text-white flex items-center justify-center font-medium">
+      <section className="bg-surface-elevated/40 border border-white/10 rounded-2xl p-6 md:p-8 mb-12 backdrop-blur-md shadow-2xl relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-brand-cyan/5 rounded-full blur-3xl"></div>
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+          <div className="flex items-center gap-5">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-brand text-void flex items-center justify-center font-display text-xl shadow-lg">
               {(user?.full_name ?? "?").split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase()}
             </div>
             <div>
-              <p className="text-white font-medium">{user?.full_name}</p>
-              <p className="text-sm text-muted">{user?.email}</p>
+              <p className="text-2xl font-display text-white">{user?.full_name}</p>
+              <p className="text-sm text-brand-cyan">{user?.email}</p>
             </div>
           </div>
-          <ButtonLink href="/profile/me" variant="outline">Edit profile</ButtonLink>
+          <ButtonLink href="/profile/me" variant="outline" className="shrink-0 bg-white/5 border-white/20 hover:border-brand-cyan/50 hover:bg-brand-cyan/10">Edit profile</ButtonLink>
         </div>
-        {profile && (
-          <p className="text-sm text-muted mt-4">
-            Profile: <span className="text-white">{profile.display_name}</span> ·{" "}
-            <Chip tone={profile.visibility === "public" ? "green" : "neutral"}>{profile.visibility}</Chip>{" "}
-            <Link href={`/profiles/${profile.id}`} className="text-blue underline underline-offset-4 ml-1">view public page</Link>
-          </p>
-        )}
-        {!profile && (
-          <p className="text-sm text-muted mt-4">
-            No profile yet —{" "}
-            <Link href="/onboarding/profile" className="text-blue underline underline-offset-4">create one</Link>{" "}
-            to unlock skills, evidence, and services.
-          </p>
-        )}
+        <div className="relative z-10 mt-6 pt-6 border-t border-white/10">
+          {profile ? (
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-muted">Profile Status:</span>
+              <span className="text-white font-medium">{profile.display_name}</span>
+              <Chip tone={profile.visibility === "public" ? "green" : "neutral"}>{profile.visibility}</Chip>
+              <Link href={`/profiles/${profile.id}`} className="text-sm text-brand-cyan hover:text-white transition-colors ml-auto">View public page &rarr;</Link>
+            </div>
+          ) : (
+            <p className="text-sm text-muted">
+              No profile yet —{" "}
+              <Link href="/onboarding/profile" className="text-brand-cyan hover:underline underline-offset-4">create one</Link>{" "}
+              to unlock skills, evidence, and services.
+            </p>
+          )}
+        </div>
+      </section>
+
+      {/* Verification Update Box */}
+      <section className="mb-12">
+        <MonoLabel className="block mb-4 text-brand-cyan">Capability Analysis & Links</MonoLabel>
+        <div className="bg-surface-elevated/30 border border-brand-cyan/20 rounded-2xl p-6 hover:border-brand-cyan/50 transition-colors group">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div>
+              <h2 className="text-lg font-display text-white mb-1">Update CV & Verification Links</h2>
+              <p className="text-sm text-muted max-w-2xl">
+                Your CV, GitHub, Upwork, and Fiverr links are tied to your Readiness Score. To update these files or links, simply run a new AI Capability Analysis. The backend will parse your new files and automatically update your profile.
+              </p>
+            </div>
+            <ButtonLink href="/analyze" className="shrink-0 bg-brand-cyan !text-void hover:bg-white transition-colors font-medium rounded-xl px-6 py-3">
+              Run New Analysis
+            </ButtonLink>
+          </div>
+        </div>
       </section>
 
       {/* Capability sections */}
@@ -238,7 +259,7 @@ function SettingsInner() {
         <div className="grid md:grid-cols-2 gap-4">
           {CAPABILITY_SECTIONS.map((s) => (
             <Link key={s.href} href={s.href}
-              className="group border border-white/10 rounded-md p-6 hover:border-white/10 transition-colors bg-void">
+              className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm hover:bg-white/10 hover:border-brand-cyan/40 transition-all duration-300">
               <div className="flex items-center justify-between">
                 <h2 className="text-feature-heading font-display text-white">{s.title}</h2>
                 <span className="text-muted group-hover:text-white">→</span>
@@ -252,7 +273,7 @@ function SettingsInner() {
       {/* Account */}
       <section>
         <MonoLabel className="block mb-4">Account</MonoLabel>
-        <div className="border-t border-white/10 divide-y divide-hairline">
+        <div className="border border-white/10 bg-white/5 rounded-2xl p-6 divide-y divide-white/10 mt-2">
           {ACCOUNT_ITEMS.map((i) => (
             <div key={i.title} className="py-4">
               <p className="text-white font-medium">{i.title}</p>
@@ -271,7 +292,7 @@ function SettingsInner() {
       {/* Security */}
       <section className="mt-12">
         <MonoLabel className="block mb-4">Security</MonoLabel>
-        <div className="border-t border-white/10 divide-y divide-hairline">
+        <div className="border border-white/10 bg-white/5 rounded-2xl p-6 divide-y divide-white/10 mt-2">
           <ChangeEmailForm />
           <ChangePasswordForm />
         </div>

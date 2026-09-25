@@ -41,7 +41,7 @@ export default function AppHeader() {
     <header className="sticky top-0 z-40 bg-void/95 backdrop-blur border-b border-white/10">
       <div className="max-w-shell mx-auto px-6 h-16 flex items-center gap-8">
         <Link href="/dashboard" className="flex items-center gap-2 shrink-0">
-          <Image src="/assets/logo.png" alt="AI5K Logo" width={140} height={40} className="h-8 md:h-10 w-auto object-contain" priority />
+          <Image src="/assets/logo.png" alt="AI5K Logo" width={140} height={40} className="h-12 md:h-16 w-auto object-contain" priority />
         </Link>
 
         <nav className="hidden md:flex items-center gap-1 flex-1" aria-label="Main">

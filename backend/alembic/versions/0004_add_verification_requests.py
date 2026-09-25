@@ -36,7 +36,7 @@ def upgrade() -> None:
             nullable=True,
         ),
         sa.Column("reviewed_at", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False),
     )
     op.create_index("ix_verification_requests_status", "verification_requests", ["status"])
     op.create_index(

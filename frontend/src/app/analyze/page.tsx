@@ -10,6 +10,7 @@ import AppShell from "@/components/layout/AppShell";
 import CvSuggestions from "@/components/skills/CvSuggestions";
 import { Chip, MonoLabel, Notice, PageHeader, Spinner } from "@/components/ui/Bits";
 import { ButtonLink } from "@/components/ui/Button";
+import { FileUpload } from "@/components/ui/FileUpload";
 import { useAuth } from "@/lib/auth-context";
 import {
   createProfileCheck,
@@ -43,6 +44,12 @@ function normalizeUrl(url: string): string {
 
 function SubmitForm({ onStarted }: { onStarted: (id: string) => void }) {
   const [github, setGithub] = useState("");
+  const [btnMousePos, setBtnMousePos] = useState({ x: 0, y: 0 });
+  const [btnClicked, setBtnClicked] = useState(false);
+  const handleBtnMouseMove = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setBtnMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+  };
   const [upwork, setUpwork] = useState("");
   const [fiverr, setFiverr] = useState("");
   const [cv, setCv] = useState<{ token: string; filename: string; size: number } | null>(null);
@@ -50,9 +57,7 @@ function SubmitForm({ onStarted }: { onStarted: (id: string) => void }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
-  async function pickCv(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const handleUploadCv = async (file: File) => {
     setError("");
     setCvBusy(true);
     try {
@@ -62,9 +67,8 @@ function SubmitForm({ onStarted }: { onStarted: (id: string) => void }) {
       setError(describeApiError(err));
     } finally {
       setCvBusy(false);
-      e.target.value = "";
     }
-  }
+  };
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -90,62 +94,98 @@ function SubmitForm({ onStarted }: { onStarted: (id: string) => void }) {
     }
   }
 
-  const inputCls =
-    "w-full border border-white/10 rounded-md px-3 py-2 text-sm bg-void text-white focus:outline-none focus:border-white/10";
-
   return (
-    <form onSubmit={submit} className="max-w-xl">
-      <p className="text-body text-muted mb-6">
-        Submit your public profiles and/or your CV. The backend fetches each source — GitHub directly,
-        Upwork/Fiverr corroborated via web search, your CV parsed for skills — stores everything, and
-        returns an evidence-based verdict.
-      </p>
-      <div className="space-y-4">
-        <div>
-          <MonoLabel className="block mb-1.5">CV — PDF, DOCX, TXT or MD (max 10 MB)</MonoLabel>
-          {cv ? (
-            <div className="flex items-center justify-between border border-white/10 rounded-md px-3 py-2 bg-void">
-              <span className="text-sm text-white">
-                <span className="text-brand-cyan">✓</span> {cv.filename}
-                <span className="text-muted"> · {(cv.size / 1024).toFixed(0)} KB — skills will be read from it</span>
-              </span>
-              <button type="button" onClick={() => setCv(null)} className="text-sm text-error-red underline underline-offset-4">
-                Remove
-              </button>
+    <form onSubmit={submit} className="max-w-2xl mx-auto">
+      <div className="bg-surface-elevated/40 border border-white/10 rounded-2xl p-6 md:p-8 backdrop-blur-md shadow-2xl relative overflow-hidden">
+        {/* Glow accent */}
+        <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-brand-cyan/50 to-transparent opacity-50"></div>
+        
+        <div className="mb-8">
+          <h2 className="text-xl font-display text-white mb-2">Run Capability Analysis</h2>
+          <p className="text-sm text-muted leading-relaxed">
+            Submit your professional evidence. Our engine parses your CV, verifies external profiles, and constructs your capability baseline in seconds.
+          </p>
+        </div>
+
+        {error && <div className="mb-6"><Notice kind="error">{error}</Notice></div>}
+
+        <div className="space-y-6">
+          <div>
+            <MonoLabel className="block mb-2 text-brand-cyan">Primary Evidence</MonoLabel>
+            <FileUpload 
+              onUpload={handleUploadCv} 
+              isUploading={cvBusy} 
+              uploadedFileName={cv?.filename} 
+              onRemove={() => setCv(null)} 
+            />
+          </div>
+
+          <div className="pt-4 border-t border-white/10">
+            <MonoLabel className="block mb-4">External Verification (Optional)</MonoLabel>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-white/70 ml-1">GitHub Profile</label>
+                <input
+                  type="url"
+                  placeholder="https://github.com/username"
+                  value={github}
+                  onChange={(e) => setGithub(e.target.value)}
+                  className="w-full bg-void border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-brand-cyan focus:ring-1 focus:ring-brand-cyan/50 transition-all placeholder:text-white/20"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-white/70 ml-1">Upwork Profile</label>
+                <input
+                  type="url"
+                  placeholder="https://upwork.com/freelancers/..."
+                  value={upwork}
+                  onChange={(e) => setUpwork(e.target.value)}
+                  className="w-full bg-void border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-brand-cyan focus:ring-1 focus:ring-brand-cyan/50 transition-all placeholder:text-white/20"
+                />
+              </div>
+              <div className="space-y-1.5 md:col-span-2">
+                <label className="text-xs font-medium text-white/70 ml-1">Fiverr Profile</label>
+                <input
+                  type="url"
+                  placeholder="https://fiverr.com/username"
+                  value={fiverr}
+                  onChange={(e) => setFiverr(e.target.value)}
+                  className="w-full bg-void border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-brand-cyan focus:ring-1 focus:ring-brand-cyan/50 transition-all placeholder:text-white/20"
+                />
+              </div>
             </div>
-          ) : (
-            <label className="block border-2 border-dashed border-brand-cyan/40 bg-brand-cyan/5 rounded-xl px-3 py-10 text-center cursor-pointer hover:border-brand-cyan hover:bg-brand-cyan/10 hover:shadow-[0_0_20px_rgba(80,223,251,0.2)] transition-all duration-300 group">
-              <span className="text-sm text-muted">{cvBusy ? "Uploading…" : "Click to choose a file"}</span>
-              <input type="file" accept=".pdf,.docx,.txt,.md,application/pdf,text/plain,text/markdown" className="hidden"
-                onChange={pickCv} disabled={cvBusy} />
-            </label>
-          )}
+          </div>
         </div>
-        <div>
-          <MonoLabel className="block mb-1.5">GitHub profile URL</MonoLabel>
-          <input type="text" value={github} onChange={(e) => setGithub(e.target.value)}
-            placeholder="github.com/yourhandle — https:// added automatically" className={inputCls} />
-        </div>
-        <div>
-          <MonoLabel className="block mb-1.5">Upwork profile URL</MonoLabel>
-          <input type="text" value={upwork} onChange={(e) => setUpwork(e.target.value)}
-            placeholder="upwork.com/freelancers/~… — https:// added automatically" className={inputCls} />
-        </div>
-        <div>
-          <MonoLabel className="block mb-1.5">Fiverr profile URL</MonoLabel>
-          <input type="text" value={fiverr} onChange={(e) => setFiverr(e.target.value)}
-            placeholder="fiverr.com/username — https:// added automatically" className={inputCls} />
+
+        <div className="mt-8 pt-6 border-t border-white/10 flex justify-end">
+          <button
+            type="submit"
+            onMouseMove={handleBtnMouseMove}
+            onClick={() => { setBtnClicked(true); setTimeout(() => setBtnClicked(false), 800); }}
+            disabled={busy || (!github && !upwork && !fiverr && !cv)}
+            className={`group relative overflow-hidden rounded-xl px-8 py-3 text-sm font-semibold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 ${
+              btnClicked ? "bg-brand-cyan text-void shadow-[0_0_40px_rgba(80,223,251,0.6)] scale-95" : "bg-white/10 text-white hover:bg-white/20 border border-white/20 hover:border-brand-cyan/50 hover:shadow-[0_0_25px_rgba(80,223,251,0.3)]"
+            }`}
+          >
+            <div 
+              className="pointer-events-none absolute -inset-px rounded-xl opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+              style={{
+                background: `radial-gradient(150px circle at ${btnMousePos.x}px ${btnMousePos.y}px, rgba(80,223,251,0.4), transparent 40%)`
+              }}
+            />
+            <span className="relative z-10 flex items-center gap-2">
+            {busy ? (
+              <>
+                <div className="w-4 h-4 rounded-full border-2 border-void border-t-transparent animate-spin"></div>
+                Analyzing...
+              </>
+            ) : (
+              "Initialize Analysis"
+            )}
+            </span>
+          </button>
         </div>
       </div>
-      {error && <div className="mt-4"><Notice kind="error">{error}</Notice></div>}
-      <button type="submit" disabled={busy}
-        className="mt-6 bg-gradient-brand text-white rounded-full px-8 py-2.5 text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50">
-        {busy ? "Starting…" : "Run readiness check"}
-      </button>
-      <p className="text-micro text-muted mt-3">
-        GitHub is fetched directly; Upwork/Fiverr presence is corroborated via web search (a configured
-        provider improves recall — the keyless fallback works too). Your CV is parsed for recognized skills.
-      </p>
     </form>
   );
 }

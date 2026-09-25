@@ -53,7 +53,7 @@ function LoginForm() {
   return (
     <main className="min-h-screen grid md:grid-cols-2">
       <section className="hidden md:flex flex-col justify-between bg-navy p-12">
-        <Link href="/"><Image src="/assets/logo.png" alt="AI5K Logo" width={140} height={40} className="h-8 md:h-10 w-auto object-contain" priority /></Link>
+        <Link href="/"><Image src="/assets/logo.png" alt="AI5K Logo" width={140} height={40} className="h-12 md:h-16 w-auto object-contain" priority /></Link>
         <div>
           <h2 className="text-section-heading font-display text-white">
             Evidence over<br />assertion.
