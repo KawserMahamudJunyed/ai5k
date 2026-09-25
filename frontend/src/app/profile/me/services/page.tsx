@@ -97,8 +97,8 @@ function ServicesEditor() {
   if (error === "no-profile") {
     return (
       <main className="flex min-h-[60vh] items-center justify-center p-6">
-        <div className="max-w-md text-center border border-hairline rounded-md p-10 bg-canvas">
-          <h1 className="text-card-heading font-display text-ink mb-3">No profile yet</h1>
+        <div className="max-w-md text-center border border-white/10 rounded-md p-10 bg-void">
+          <h1 className="text-card-heading font-display text-white mb-3">No profile yet</h1>
           <Link href="/onboarding/profile"><Button>Create profile</Button></Link>
         </div>
       </main>
@@ -111,7 +111,7 @@ function ServicesEditor() {
 
       {error && error !== "no-profile" && <div className="mb-6"><Notice kind="error">{error}</Notice></div>}
 
-      <form onSubmit={handleCreate} className="bg-canvas border border-hairline rounded-md p-6 mb-8 space-y-4">
+      <form onSubmit={handleCreate} className="bg-void border border-white/10 rounded-md p-6 mb-8 space-y-4">
         <Field label="Title" htmlFor="sTitle" required>
           <input id="sTitle" type="text" required maxLength={255} placeholder="e.g. Document-intake agent build"
             value={title} onChange={(e) => setTitle(e.target.value)} className={inputClass} />
@@ -136,21 +136,21 @@ function ServicesEditor() {
       </form>
 
       {services.length === 0 ? (
-        <p className="text-center py-16 text-muted border border-hairline rounded-md">No services yet. Add your first above.</p>
+        <p className="text-center py-16 text-muted border border-white/10 rounded-md">No services yet. Add your first above.</p>
       ) : (
-        <div className="divide-y divide-hairline border-y border-hairline">
+        <div className="divide-y divide-hairline border-y border-white/10">
           {services.map((s) => (
             <div key={s.id} className="flex flex-col sm:flex-row sm:items-center gap-3 py-4">
               <div className="flex-1">
                 <div className="flex items-center gap-3 flex-wrap">
-                  <span className="text-ink font-medium">{s.title}</span>
+                  <span className="text-white font-medium">{s.title}</span>
                   <Chip tone="navy">{rateLabel(s)}</Chip>
                 </div>
                 {s.description && <p className="text-sm text-muted mt-1">{s.description}</p>}
               </div>
               <select value={s.availability_status} onChange={(e) => handleAvailability(s, e.target.value)}
                 aria-label={`Availability for ${s.title}`}
-                className="bg-canvas border border-hairline rounded-sm px-3 py-2 text-sm text-ink">
+                className="bg-void border border-white/10 rounded-sm px-3 py-2 text-sm text-white">
                 {AVAILABILITY.map((a) => <option key={a} value={a}>{a}</option>)}
               </select>
               <button type="button" onClick={() => handleDelete(s)} className="text-muted hover:text-error-red px-2"

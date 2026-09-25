@@ -20,7 +20,7 @@ export default function AdminPage() {
         <div className="grid md:grid-cols-3 gap-6">
           {ADMIN_LINKS.map((l) => (
             <ButtonLink key={l.href} href={l.href} variant="outline" className="!rounded-md h-auto flex-col items-start gap-2 p-6 text-left">
-              <span className="text-feature-heading font-display text-ink">{l.title}</span>
+              <span className="text-feature-heading font-display text-white">{l.title}</span>
               <span className="text-sm text-muted font-normal">{l.body}</span>
             </ButtonLink>
           ))}

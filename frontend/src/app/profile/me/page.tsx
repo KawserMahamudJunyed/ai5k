@@ -79,7 +79,7 @@ function ProfileForm({ profile }: { profile: ProfileRead }) {
 
       <div>
         <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-medium text-ink">Portfolio links</span>
+          <span className="text-sm font-medium text-white">Portfolio links</span>
           <button type="button" onClick={() => links.length < 20 && setLinks([...links, { label: "", url: "" }])}
             className="text-sm text-blue underline underline-offset-4">
             + Add link
@@ -91,10 +91,10 @@ function ProfileForm({ profile }: { profile: ProfileRead }) {
             <div key={i} className="flex gap-2">
               <input type="text" placeholder="Label" maxLength={100} value={link.label} aria-label={`Link ${i + 1} label`}
                 onChange={(e) => setLinks(links.map((l, idx) => (idx === i ? { ...l, label: e.target.value } : l)))}
-                className="w-40 bg-canvas border border-hairline rounded-sm px-3 py-2 text-ink" />
+                className="w-40 bg-void border border-white/10 rounded-sm px-3 py-2 text-white" />
               <input type="text" inputMode="url" placeholder="example.com/page" value={link.url} aria-label={`Link ${i + 1} URL`}
                 onChange={(e) => setLinks(links.map((l, idx) => (idx === i ? { ...l, url: e.target.value } : l)))}
-                className="flex-1 bg-canvas border border-hairline rounded-sm px-3 py-2 text-ink" />
+                className="flex-1 bg-void border border-white/10 rounded-sm px-3 py-2 text-white" />
               <button type="button" onClick={() => setLinks(links.filter((_, idx) => idx !== i))}
                 className="px-3 text-muted hover:text-error-red" aria-label={`Remove link ${i + 1}`}>✕</button>
             </div>
@@ -102,7 +102,7 @@ function ProfileForm({ profile }: { profile: ProfileRead }) {
         </div>
       </div>
 
-      <div className="flex items-center gap-5 pt-4 border-t border-hairline">
+      <div className="flex items-center gap-5 pt-4 border-t border-white/10">
         <Button type="submit" disabled={saving}>{saving ? "Saving…" : "Save changes"}</Button>
         <Link href={`/profiles/${profile.id}`} className="text-sm text-blue underline underline-offset-4">
           View public page →
@@ -133,8 +133,8 @@ function MyProfileInner() {
   if (loadState === "no-profile") {
     return (
       <main className="flex min-h-[60vh] items-center justify-center p-6">
-        <div className="max-w-md text-center border border-hairline rounded-md p-10 bg-canvas">
-          <h1 className="text-card-heading font-display text-ink mb-3">No profile yet</h1>
+        <div className="max-w-md text-center border border-white/10 rounded-md p-10 bg-void">
+          <h1 className="text-card-heading font-display text-white mb-3">No profile yet</h1>
           <p className="text-muted mb-6">Create yours to join the network.</p>
           <Link href="/onboarding/profile"><Button>Create profile</Button></Link>
         </div>
@@ -152,7 +152,7 @@ function MyProfileInner() {
     <main className="max-w-text mx-auto px-6 py-12">
       <PageHeader eyebrow="Signed in" title="My profile" />
       {profile && (
-        <div className="bg-canvas border border-hairline rounded-md p-8">
+        <div className="bg-void border border-white/10 rounded-md p-8">
           <ProfileForm profile={profile} />
         </div>
       )}

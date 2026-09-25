@@ -67,8 +67,8 @@ function MembersInner({ orgId }: { orgId: string }) {
   if (!isAdmin) {
     return (
       <main className="flex min-h-[60vh] items-center justify-center p-6">
-        <div className="max-w-md text-center border border-hairline rounded-md p-10 bg-canvas">
-          <h1 className="text-card-heading font-display text-ink mb-3">Admins only</h1>
+        <div className="max-w-md text-center border border-white/10 rounded-md p-10 bg-void">
+          <h1 className="text-card-heading font-display text-white mb-3">Admins only</h1>
           <p className="text-muted">Members administration requires the org_admin role.</p>
         </div>
       </main>
@@ -81,7 +81,7 @@ function MembersInner({ orgId }: { orgId: string }) {
 
       <OrgTabNav orgId={orgId} />
 
-      <form onSubmit={handleInvite} className="bg-canvas border border-hairline rounded-md p-6 mb-8 space-y-4">
+      <form onSubmit={handleInvite} className="bg-void border border-white/10 rounded-md p-6 mb-8 space-y-4">
         <Field label="Invite by email" htmlFor="invEmail" hint="(they must already have an AI5K account)">
           <div className="flex gap-2">
             <input id="invEmail" type="email" required placeholder="colleague@example.com"
@@ -96,13 +96,13 @@ function MembersInner({ orgId }: { orgId: string }) {
       {members === null ? (
         <div className="flex justify-center py-12"><Spinner /></div>
       ) : members.length === 0 ? (
-        <p className="text-center py-16 text-muted border border-hairline rounded-md">No members yet — invite someone above.</p>
+        <p className="text-center py-16 text-muted border border-white/10 rounded-md">No members yet — invite someone above.</p>
       ) : (
-        <div className="divide-y divide-hairline border-y border-hairline">
+        <div className="divide-y divide-hairline border-y border-white/10">
           {members.map((m) => (
             <div key={m.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 py-4">
               <div>
-                <p className="text-ink font-medium">{m.user.full_name} <span className="text-muted text-sm">· {m.user.email}</span></p>
+                <p className="text-white font-medium">{m.user.full_name} <span className="text-muted text-sm">· {m.user.email}</span></p>
                 <p className="text-xs text-muted mt-1">
                   {m.consent_given ? "Consented — skills appear in aggregate view" : "Awaiting consent — not yet visible in aggregate skills"}
                 </p>

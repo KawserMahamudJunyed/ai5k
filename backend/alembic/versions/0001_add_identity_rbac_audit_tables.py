@@ -140,7 +140,7 @@ def upgrade() -> None:
         sa.Column("action", sa.String(length=100), nullable=False),
         sa.Column("entity_type", sa.String(length=100), nullable=False),
         sa.Column("entity_id", postgresql.UUID(as_uuid=True), nullable=True),
-        sa.Column("metadata", postgresql.JSONB(), nullable=True),
+        sa.Column("metadata", sa.JSON(), nullable=True),
         sa.Column("ip_address", sa.String(length=64), nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
     )

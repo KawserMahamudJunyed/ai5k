@@ -127,13 +127,13 @@ function AddEvidenceCard({
   const needsUrl = mode === "link" || mode === "testimonial";
 
   return (
-    <form onSubmit={handleSubmit} className="bg-canvas border border-hairline rounded-md p-6 mb-8 space-y-5">
+    <form onSubmit={handleSubmit} className="bg-void border border-white/10 rounded-md p-6 mb-8 space-y-5">
       <div className="flex gap-2" role="tablist" aria-label="Evidence type">
         {(["link", "testimonial", "file"] as const).map((t) => (
           <button key={t} type="button" role="tab" aria-selected={mode === t}
             onClick={() => { setMode(t); setError(""); }}
             className={`px-4 py-2 rounded-full text-sm capitalize transition-colors ${
-              mode === t ? "bg-near-black text-white" : "text-muted hover:text-ink hover:bg-stone"
+              mode === t ? "bg-near-black text-white" : "text-muted hover:text-white hover:bg-navy"
             }`}>
             {t}
           </button>
@@ -158,7 +158,7 @@ function AddEvidenceCard({
             <div className="flex gap-2">
               <select aria-label="File category" value={fileType}
                 onChange={(e) => setFileType(e.target.value as typeof fileType)}
-                className="bg-canvas border border-hairline rounded-sm px-3 py-2.5 text-sm text-ink">
+                className="bg-void border border-white/10 rounded-sm px-3 py-2.5 text-sm text-white">
                 {FILE_TYPES.map((f) => <option key={f.value} value={f.value}>{f.label}</option>)}
               </select>
               <input id="evFile" ref={fileInput} type="file" required accept={FILE_TYPES.find((f) => f.value === fileType)?.accept}
@@ -177,7 +177,7 @@ function AddEvidenceCard({
       {claims.length > 0 && (
         <Field label="Link to a skill claim" htmlFor="evSkill" hint="(optional)">
           <select id="evSkill" value={linkSkillId} onChange={(e) => setLinkSkillId(e.target.value)}
-            className="w-full md:w-80 bg-canvas border border-hairline rounded-sm px-4 py-2.5 text-sm text-ink">
+            className="w-full md:w-80 bg-void border border-white/10 rounded-sm px-4 py-2.5 text-sm text-white">
             <option value="">None</option>
             {claims.map((c) => (
               <option key={c.id} value={c.id}>{c.skill_name}{c.proficiency_level ? ` · ${c.proficiency_level}` : ""}</option>
@@ -252,11 +252,11 @@ function EvidenceRow({
   };
 
   return (
-    <div className="py-5 border-b border-hairline space-y-3">
+    <div className="py-5 border-b border-white/10 space-y-3">
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
         <div className="flex-1">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-ink font-medium">{evidence.title}</span>
+            <span className="text-white font-medium">{evidence.title}</span>
             <Chip>{evidence.source_type}</Chip>
             <Chip tone={evidence.verification_status === "verified" ? "green" : evidence.verification_status === "rejected" ? "red" : "neutral"}>
               {evidence.verification_status}
@@ -296,11 +296,11 @@ function EvidenceRow({
 
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-xs text-muted">Supports:</span>
-        {evidence.skill_links.length === 0 && <span className="text-xs text-muted-2 italic">no skills linked</span>}
+        {evidence.skill_links.length === 0 && <span className="text-xs text-muted italic">no skills linked</span>}
         {evidence.skill_links.map((l) => {
           const claim = claims.find((c) => c.id === l.profile_skill_id);
           return (
-            <span key={l.id} className="inline-flex items-center gap-1 text-xs px-2.5 py-0.5 rounded-full border border-hairline text-ink">
+            <span key={l.id} className="inline-flex items-center gap-1 text-xs px-2.5 py-0.5 rounded-full border border-white/10 text-white">
               {claim?.skill_name ?? "skill"}
               <button type="button" onClick={() => handleUnlink(l.id)} className="text-muted hover:text-error-red"
                 aria-label={`Unlink ${claim?.skill_name ?? "skill"}`}>✕</button>
@@ -315,7 +315,7 @@ function EvidenceRow({
         {linking && (
           <span className="inline-flex items-center gap-2">
             <select value={linkChoice} onChange={(e) => setLinkChoice(e.target.value)} aria-label="Skill to link"
-              className="bg-canvas border border-hairline rounded-sm px-2 py-1 text-xs text-ink">
+              className="bg-void border border-white/10 rounded-sm px-2 py-1 text-xs text-white">
               <option value="">Choose…</option>
               {linkable.map((c) => <option key={c.id} value={c.id}>{c.skill_name}</option>)}
             </select>
@@ -355,8 +355,8 @@ function EvidencePageInner() {
   if (error === "no-profile") {
     return (
       <main className="flex min-h-[60vh] items-center justify-center p-6">
-        <div className="max-w-md text-center border border-hairline rounded-md p-10 bg-canvas">
-          <h1 className="text-card-heading font-display text-ink mb-3">No profile yet</h1>
+        <div className="max-w-md text-center border border-white/10 rounded-md p-10 bg-void">
+          <h1 className="text-card-heading font-display text-white mb-3">No profile yet</h1>
           <Link href="/onboarding/profile"><Button>Create profile</Button></Link>
         </div>
       </main>
@@ -373,9 +373,9 @@ function EvidencePageInner() {
         <>
           <AddEvidenceCard profileId={profile.id} claims={claims} onCreated={() => load(profile)} />
           {evidence.length === 0 ? (
-            <p className="text-center py-16 text-muted border border-hairline rounded-md">No evidence yet. Add a link, testimonial, or file above.</p>
+            <p className="text-center py-16 text-muted border border-white/10 rounded-md">No evidence yet. Add a link, testimonial, or file above.</p>
           ) : (
-            <div className="border-t border-hairline">
+            <div className="border-t border-white/10">
               {evidence.map((ev) => (
                 <EvidenceRow key={ev.id} profileId={profile.id} evidence={ev} claims={claims} onChanged={() => load(profile)} />
               ))}

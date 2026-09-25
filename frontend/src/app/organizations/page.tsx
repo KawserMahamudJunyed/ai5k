@@ -51,8 +51,8 @@ function CreateOrgForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-canvas border border-hairline rounded-md p-8 space-y-5">
-      <h2 className="text-feature-heading font-display text-ink">Create an organization</h2>
+    <form onSubmit={handleSubmit} className="bg-void border border-white/10 rounded-md p-8 space-y-5">
+      <h2 className="text-feature-heading font-display text-white">Create an organization</h2>
       {error && <Notice kind="error">{error}</Notice>}
 
       <div className="grid md:grid-cols-2 gap-4">
@@ -109,7 +109,7 @@ function OrgsInner() {
       {invitations.length > 0 && (
         <Link href="/organizations/invitations"
           className="block p-4 rounded-sm border border-coral/40 bg-coral/5 hover:bg-coral/10 transition-colors mb-8">
-          <span className="text-ink font-medium">
+          <span className="text-white font-medium">
             {invitations.length} pending invitation{invitations.length > 1 ? "s" : ""}
           </span>
           <span className="text-muted text-sm ml-2">— review and respond →</span>
@@ -119,12 +119,12 @@ function OrgsInner() {
       {orgs === null ? (
         <div className="flex justify-center py-12"><Spinner /></div>
       ) : orgs.length > 0 ? (
-        <div className="divide-y divide-hairline border-y border-hairline mb-10">
+        <div className="divide-y divide-hairline border-y border-white/10 mb-10">
           {orgs.map((org) => (
             <Link key={org.id} href={`/organizations/${org.id}`}
-              className="flex items-center justify-between gap-4 py-4 hover:bg-stone/40 transition-colors">
+              className="flex items-center justify-between gap-4 py-4 hover:bg-navy/40 transition-colors">
               <div>
-                <p className="text-ink font-medium">{org.name}</p>
+                <p className="text-white font-medium">{org.name}</p>
                 <p className="text-sm text-muted">
                   /organizations/{org.slug}
                   {org.description ? ` · ${org.description.slice(0, 80)}${org.description.length > 80 ? "…" : ""}` : ""}

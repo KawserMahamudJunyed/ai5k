@@ -54,7 +54,7 @@ function InvitationsInner() {
       {invitations === null ? (
         <div className="flex justify-center py-16"><Spinner /></div>
       ) : invitations.length === 0 ? (
-        <div className="border border-hairline rounded-md p-10 text-center bg-canvas">
+        <div className="border border-white/10 rounded-md p-10 text-center bg-void">
           <p className="text-muted mb-6">No pending invitations.</p>
           <Link href="/organizations" className="text-blue underline underline-offset-4">← Your organizations</Link>
         </div>
@@ -62,9 +62,9 @@ function InvitationsInner() {
         <div className="space-y-4">
           {invitations.map((inv) => (
             <div key={inv.member_id}
-              className="border border-hairline rounded-md p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-canvas">
+              className="border border-white/10 rounded-md p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-void">
               <div>
-                <p className="text-ink font-medium text-lg">{inv.organization_name}</p>
+                <p className="text-white font-medium text-lg">{inv.organization_name}</p>
                 <p className="text-sm text-muted mt-1">
                   Consenting lets this organization see an aggregate view of your skills — proficiency levels and
                   evidence counts. You can be removed at any time.

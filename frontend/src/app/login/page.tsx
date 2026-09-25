@@ -6,6 +6,7 @@
 
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import Button from "@/components/ui/Button";
 import { Field, inputClass, Notice } from "@/components/ui/Bits";
@@ -51,22 +52,22 @@ function LoginForm() {
 
   return (
     <main className="min-h-screen grid md:grid-cols-2">
-      <section className="hidden md:flex flex-col justify-between bg-stone p-12">
-        <Link href="/" className="font-display text-ink">AI5K</Link>
+      <section className="hidden md:flex flex-col justify-between bg-navy p-12">
+        <Link href="/"><Image src="/assets/logo.png" alt="AI5K Logo" width={140} height={40} className="h-8 md:h-10 w-auto object-contain" priority /></Link>
         <div>
-          <h2 className="text-section-heading font-display text-ink">
+          <h2 className="text-section-heading font-display text-white">
             Evidence over<br />assertion.
           </h2>
           <p className="text-body text-muted mt-4 max-w-sm">
             Log in to your verified capability profile.
           </p>
         </div>
-        <p className="text-micro text-muted-2">Global AI Capability Network</p>
+        <p className="text-micro text-muted">Global AI Capability Network</p>
       </section>
 
       <section className="flex items-center justify-center p-6">
-        <div className="w-full max-w-md bg-canvas border border-hairline rounded-md p-8">
-          <h1 className="text-card-heading font-display text-ink mb-2">Log in</h1>
+        <div className="w-full max-w-md bg-void border border-white/10 rounded-md p-8">
+          <h1 className="text-card-heading font-display text-white mb-2">Log in</h1>
           <p className="text-sm text-muted mb-8">Welcome back.</p>
 
           {error && <div className="mb-6"><Notice kind="error">{error}</Notice></div>}
@@ -102,3 +103,8 @@ export default function LoginPage() {
     </Suspense>
   );
 }
+
+
+
+
+

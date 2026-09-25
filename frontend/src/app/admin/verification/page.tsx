@@ -52,8 +52,8 @@ function QueueInner() {
   if (!canReview) {
     return (
       <main className="flex min-h-[60vh] items-center justify-center p-6">
-        <div className="max-w-md text-center border border-hairline rounded-md p-10 bg-canvas">
-          <h1 className="text-card-heading font-display text-ink mb-3">Reviewers only</h1>
+        <div className="max-w-md text-center border border-white/10 rounded-md p-10 bg-void">
+          <h1 className="text-card-heading font-display text-white mb-3">Reviewers only</h1>
           <p className="text-muted">The verification queue requires platform review permissions.</p>
         </div>
       </main>
@@ -71,9 +71,9 @@ function QueueInner() {
       {rows === null ? (
         <div className="flex justify-center py-16"><Spinner /></div>
       ) : rows.length === 0 ? (
-        <p className="text-center py-16 text-muted border border-hairline rounded-md">Queue is clear. Nothing pending.</p>
+        <p className="text-center py-16 text-muted border border-white/10 rounded-md">Queue is clear. Nothing pending.</p>
       ) : (
-        <div className="divide-y divide-hairline border-y border-hairline">
+        <div className="divide-y divide-hairline border-y border-white/10">
           {rows.map((row) => (
             <div key={row.id} className="py-5 space-y-3">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -86,7 +86,7 @@ function QueueInner() {
                   </span>
                 </div>
                 <div className="flex gap-2">
-                  <Button onClick={() => decide(row, true)} disabled={busyId === row.id} className="!bg-brand-green hover:!bg-[#00281f]">
+                  <Button onClick={() => decide(row, true)} disabled={busyId === row.id} className="!bg-gradient-brand hover:!bg-[#00281f]">
                     {busyId === row.id ? "…" : "Approve"}
                   </Button>
                   <Button variant="danger" onClick={() => decide(row, false)} disabled={busyId === row.id}>

@@ -13,10 +13,9 @@ const base =
   "inline-flex items-center justify-center gap-2 font-medium transition-colors rounded-full disabled:opacity-40 disabled:pointer-events-none";
 
 const variants: Record<Variant, string> = {
-  // Near-black on light; white on dark surfaces (parent overrides text/bg via className).
-  primary: "bg-near-black text-white hover:bg-black",
-  outline: "border border-ink text-ink hover:bg-ink/5 rounded-xl",
-  ghost: "text-ink underline underline-offset-4 decoration-hairline hover:decoration-ink",
+  primary: "btn-gradient text-void hover:opacity-90 rounded-xl",
+  outline: "border border-white/10 text-white hover:bg-brand-cyan/5 rounded-xl",
+  ghost: "text-white hover:text-brand-cyan underline underline-offset-4",
   danger: "border border-error-red/40 text-error-red hover:bg-error-red/5",
 };
 

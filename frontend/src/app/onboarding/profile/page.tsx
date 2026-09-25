@@ -88,10 +88,10 @@ export default function OnboardingPage() {
   };
 
   return (
-    <main className="min-h-screen bg-stone">
+    <main className="min-h-screen bg-navy">
       <div className="max-w-text mx-auto px-6 py-16">
         <MonoLabel className="block mb-3">Step 1 of 1 · Basic setup</MonoLabel>
-        <h1 className="text-section-heading font-display text-ink">Create your profile</h1>
+        <h1 className="text-section-heading font-display text-white">Create your profile</h1>
         <p className="text-body text-muted mt-3 mb-10">
           This becomes your public capability page. You can refine everything later.
         </p>
@@ -99,7 +99,7 @@ export default function OnboardingPage() {
         {error && <div className="mb-6"><Notice kind="error">{error}</Notice></div>}
         {cvNote && <div className="mb-6"><Notice kind="info">{cvNote}</Notice></div>}
 
-        <form onSubmit={handleSubmit} className="bg-canvas border border-hairline rounded-md p-8 space-y-6">
+        <form onSubmit={handleSubmit} className="bg-void border border-white/10 rounded-md p-8 space-y-6">
           <Field label="Display name" htmlFor="displayName" required>
             <input id="displayName" type="text" required maxLength={255} value={displayName}
               onChange={(e) => setDisplayName(e.target.value)} className={inputClass} />

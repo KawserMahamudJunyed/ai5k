@@ -12,7 +12,7 @@ export default function AdminRolesPage() {
       <main className="max-w-text mx-auto px-6 py-12">
         <PageHeader eyebrow="Platform" title="Roles"
           lede="Grant and revoke platform roles. This surface needs a user-picker before it ships; the API is live." />
-        <div className="border border-hairline rounded-md p-8 bg-canvas">
+        <div className="border border-white/10 rounded-md p-8 bg-void">
           <div className="flex flex-wrap gap-2">
             {["platform_admin", "org_admin", "professional", "reviewer"].map((r) => <Chip key={r}>{r}</Chip>)}
           </div>

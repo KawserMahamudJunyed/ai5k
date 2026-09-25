@@ -5,6 +5,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
 import { Field, inputClass, Notice } from "@/components/ui/Bits";
@@ -42,23 +43,23 @@ export default function SignupPage() {
   return (
     <main className="min-h-screen grid md:grid-cols-2">
       {/* Left: brand panel */}
-      <section className="hidden md:flex flex-col justify-between bg-stone p-12">
-        <Link href="/" className="font-display text-ink">AI5K</Link>
+      <section className="hidden md:flex flex-col justify-between bg-navy p-12">
+        <Link href="/"><Image src="/assets/logo.png" alt="AI5K Logo" width={140} height={40} className="h-8 md:h-10 w-auto object-contain" priority /></Link>
         <div>
-          <h2 className="text-section-heading font-display text-ink">
+          <h2 className="text-section-heading font-display text-white">
             Your evidence,<br />your reputation.
           </h2>
           <p className="text-body text-muted mt-4 max-w-sm">
             Create your account, build an evidence-backed profile, and pursue global opportunities.
           </p>
         </div>
-        <p className="text-micro text-muted-2">No income guarantees. Verification-based access.</p>
+        <p className="text-micro text-muted">No income guarantees. Verification-based access.</p>
       </section>
 
       {/* Right: form */}
       <section className="flex items-center justify-center p-6">
-        <div className="w-full max-w-md bg-canvas border border-hairline rounded-md p-8">
-          <h1 className="text-card-heading font-display text-ink mb-2">Create your account</h1>
+        <div className="w-full max-w-md bg-void border border-white/10 rounded-md p-8">
+          <h1 className="text-card-heading font-display text-white mb-2">Create your account</h1>
           <p className="text-sm text-muted mb-8">Join the verified AI capability network.</p>
 
           {error && <div className="mb-6"><Notice kind="error">{error}</Notice></div>}
@@ -90,3 +91,8 @@ export default function SignupPage() {
     </main>
   );
 }
+
+
+
+
+

@@ -15,10 +15,10 @@ function Bar({ label, count, total }: { label: string; count: number; total: num
     <div>
       <div className="flex justify-between text-xs mb-1">
         <span className="text-muted">{label}</span>
-        <span className="text-ink">{count}</span>
+        <span className="text-white">{count}</span>
       </div>
       <div className="w-full h-1.5 bg-hairline/50 rounded-full overflow-hidden">
-        <div className="h-full bg-brand-green" style={{ width: `${pct}%` }} />
+        <div className="h-full bg-gradient-brand" style={{ width: `${pct}%` }} />
       </div>
     </div>
   );
@@ -51,16 +51,16 @@ function OrgSkillsInner({ orgId }: { orgId: string }) {
       {rows === null && !error ? (
         <div className="flex justify-center py-16"><Spinner /></div>
       ) : rows !== null && rows.length === 0 ? (
-        <p className="text-center py-16 text-muted border border-hairline rounded-md">
+        <p className="text-center py-16 text-muted border border-white/10 rounded-md">
           No skill data yet — members must consent, and at least one member needs claimed skills.
         </p>
       ) : rows !== null ? (
         <div className="space-y-6">
           {rows.map((row) => (
-            <div key={row.skill_id} className="border-b border-hairline pb-5">
+            <div key={row.skill_id} className="border-b border-white/10 pb-5">
               <div className="flex items-start justify-between gap-4 mb-3">
                 <div>
-                  <p className="text-ink font-medium">{row.name}</p>
+                  <p className="text-white font-medium">{row.name}</p>
                   {row.category && <p className="text-xs text-muted mt-0.5">{row.category}</p>}
                 </div>
                 <span className="font-mono text-micro text-muted uppercase">{row.member_count} member{row.member_count !== 1 ? "s" : ""}</span>

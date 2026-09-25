@@ -1,5 +1,6 @@
 import { ButtonLink } from "@/components/ui/Button";
 import { MonoLabel } from "@/components/ui/Bits";
+import Image from "next/image";
 
 // Landing — DESIGN.md: white editorial canvas, one monumental headline,
 // restrained copy, deep-green CTA band. Claims-policy compliant copy only.
@@ -20,7 +21,7 @@ export default function LandingPage() {
       {/* Hero — white canvas, monumental type */}
       <section className="max-w-shell mx-auto px-6 pt-20 pb-16 md:pt-28 md:pb-24">
         <MonoLabel className="block mb-6">Global AI Capability Network</MonoLabel>
-        <h1 className="text-hero font-display text-ink max-w-5xl">
+        <h1 className="text-hero font-display text-white max-w-5xl">
           Build AI. Prove capability. Earn globally.
         </h1>
         <p className="text-body-lg text-muted mt-8 max-w-2xl">
@@ -35,7 +36,7 @@ export default function LandingPage() {
       </section>
 
       {/* Trust strip — quiet, wide spacing */}
-      <section className="border-y border-hairline">
+      <section className="border-t border-white/10">
         <div className="max-w-shell mx-auto px-6 py-14 text-center">
           <MonoLabel>Built for the 5,000+ AI builder community</MonoLabel>
           <p className="text-muted text-body mt-4 max-w-xl mx-auto">
@@ -49,7 +50,7 @@ export default function LandingPage() {
         <div className="grid md:grid-cols-[1fr_1.4fr] gap-12">
           <div>
             <MonoLabel className="block mb-4">The evidence hierarchy</MonoLabel>
-            <h2 className="text-section-heading font-display text-ink">
+            <h2 className="text-section-heading font-display text-white">
               Skills are weighted by their proof.
             </h2>
             <p className="text-body text-muted mt-4">
@@ -57,12 +58,12 @@ export default function LandingPage() {
               labeled as such — verified capability is what buyers pay for.
             </p>
           </div>
-          <ul className="divide-y divide-hairline border-y border-hairline">
+          <ul className="divide-y divide-hairline border-t border-white/10">
             {EVIDENCE_LADDER.map((t) => (
               <li key={t.tier} className="flex items-center justify-between py-4">
                 <span className="flex items-baseline gap-4">
                   <span className="font-mono text-micro text-coral w-8">{t.tier}</span>
-                  <span className="text-ink">{t.name}</span>
+                  <span className="text-white">{t.name}</span>
                 </span>
                 <span className="font-mono text-micro text-muted">{t.weight}</span>
               </li>
@@ -72,8 +73,18 @@ export default function LandingPage() {
       </section>
 
       {/* Dark green CTA band */}
-      <section className="bg-brand-green">
-        <div className="max-w-shell mx-auto px-6 py-20 text-center">
+      <section className="relative overflow-hidden bg-void border-t border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)]">
+        {/* Animated Liquid Orbs */}
+        <div className="absolute inset-0 pointer-events-none opacity-50">
+          <div className="absolute top-[-10%] left-[10%] w-96 h-96 bg-brand-cyan/40 rounded-full mix-blend-screen filter blur-[80px] animate-blob" />
+          <div className="absolute top-[20%] right-[10%] w-96 h-96 bg-brand-violet/40 rounded-full mix-blend-screen filter blur-[80px] animate-blob" style={{ animationDelay: '2s' }} />
+          <div className="absolute -bottom-20 left-[40%] w-96 h-96 bg-brand-blue/40 rounded-full mix-blend-screen filter blur-[80px] animate-blob" style={{ animationDelay: '4s' }} />
+        </div>
+
+        {/* Frosted Glass Plate */}
+        <div className="absolute inset-0 bg-white/[0.02] backdrop-blur-[40px] pointer-events-none" />
+
+        <div className="relative z-10 max-w-shell mx-auto px-6 py-20 text-center">
           <h2 className="text-section-heading font-display text-white">
             Verified AI capability. Global demand.
           </h2>
@@ -82,17 +93,17 @@ export default function LandingPage() {
             USD 5,000 per month — through specialization, evidence, and access to global opportunities.
           </p>
           <div className="mt-8">
-            <ButtonLink href="/signup" className="bg-white !text-brand-green hover:bg-white/90" size="lg">
+            <ButtonLink href="/signup" variant="primary" size="lg">
               Start your profile
             </ButtonLink>
           </div>
         </div>
       </section>
 
-      <footer className="border-t border-hairline">
+      <footer className="border-t border-white/10">
         <div className="max-w-shell mx-auto px-6 py-10 flex flex-col md:flex-row items-center justify-between gap-4">
-          <span className="font-display text-ink">AI5K</span>
-          <p className="text-micro text-muted-2">
+          <Image src="/assets/logo-light.png" alt="AI5K Logo" width={140} height={40} className="h-8 md:h-10 w-auto object-contain" />
+          <p className="text-micro text-muted">
             AI5K is designed to help professionals pursue earnings targets — it does not guarantee income.
           </p>
         </div>
@@ -100,3 +111,10 @@ export default function LandingPage() {
     </main>
   );
 }
+
+
+
+
+
+
+

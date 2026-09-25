@@ -11,7 +11,7 @@ export default function AuditLogsPage() {
       <main className="max-w-shell mx-auto px-6 py-12">
         <PageHeader eyebrow="Platform" title="Audit logs"
           lede="Every privileged action with actor, entity, IP address, and request id." />
-        <div className="border-t border-hairline pt-8">
+        <div className="border-t border-white/10 pt-8">
           <MonoLabel>GET /audit-logs · requires audit:read permission</MonoLabel>
           <p className="text-sm text-muted mt-4 max-w-xl">
             The audit table ships with the admin polish pass. Every mutation you perform in this app is

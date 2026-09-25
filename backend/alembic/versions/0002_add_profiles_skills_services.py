@@ -34,9 +34,9 @@ def upgrade() -> None:
         ),
         sa.Column("display_name", sa.String(length=255), nullable=False),
         sa.Column("headline", sa.String(length=255), nullable=True),
-        sa.Column("job_roles", postgresql.JSONB(), server_default=sa.text("'[]'::jsonb"), nullable=False),
+        sa.Column("job_roles", sa.JSON(), server_default=sa.text("'[]'"), nullable=False),
         sa.Column(
-            "portfolio_links", postgresql.JSONB(), server_default=sa.text("'[]'::jsonb"), nullable=False
+            "portfolio_links", sa.JSON(), server_default=sa.text("'[]'"), nullable=False
         ),
         sa.Column("visibility", sa.String(length=32), server_default="private", nullable=False),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),

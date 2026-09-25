@@ -165,8 +165,8 @@ function SkillsEditor() {
   if (error === "no-profile") {
     return (
       <main className="flex min-h-[60vh] items-center justify-center p-6">
-        <div className="max-w-md text-center border border-hairline rounded-md p-10 bg-canvas">
-          <h1 className="text-card-heading font-display text-ink mb-3">No profile yet</h1>
+        <div className="max-w-md text-center border border-white/10 rounded-md p-10 bg-void">
+          <h1 className="text-card-heading font-display text-white mb-3">No profile yet</h1>
           <p className="text-muted mb-6">Create yours to start claiming skills.</p>
           <Link href="/onboarding/profile"><Button>Create profile</Button></Link>
         </div>
@@ -185,15 +185,15 @@ function SkillsEditor() {
       <CvSuggestions onClaimed={handleCvClaimed} />
 
       {/* Add skill */}
-      <div className="bg-canvas border border-hairline rounded-md p-6 mb-8">
+      <div className="bg-void border border-white/10 rounded-md p-6 mb-8">
         <div className="flex flex-col sm:flex-row gap-3">
           <input
             type="text" placeholder="Search or type a new skill…" value={query}
             onChange={(e) => setQuery(e.target.value)} aria-label="Skill search"
-            className="flex-1 bg-canvas border border-hairline rounded-sm px-4 py-2.5 text-ink placeholder:text-muted-2"
+            className="flex-1 bg-void border border-white/10 rounded-sm px-4 py-2.5 text-white placeholder:text-muted"
           />
           <select value={proficiency} onChange={(e) => setProficiency(e.target.value)} aria-label="Proficiency"
-            className="bg-canvas border border-hairline rounded-sm px-3 py-2.5 text-ink">
+            className="bg-void border border-white/10 rounded-sm px-3 py-2.5 text-white">
             <option value="">Proficiency…</option>
             {PROFICIENCY.map((p) => <option key={p} value={p}>{p}</option>)}
           </select>
@@ -205,7 +205,7 @@ function SkillsEditor() {
           <div className="mt-3 flex flex-wrap gap-2">
             {suggestions.map((s) => (
               <button key={s.id} type="button" onClick={() => handleAdd({ skill_id: s.id })}
-                className="px-3 py-1.5 rounded-full border border-hairline text-sm text-ink hover:bg-stone transition-colors">
+                className="px-3 py-1.5 rounded-full border border-white/10 text-sm text-white hover:bg-navy transition-colors">
                 {s.name}{s.category ? ` · ${s.category}` : ""}
               </button>
             ))}
@@ -218,14 +218,14 @@ function SkillsEditor() {
 
       {/* Claims */}
       {claims.length === 0 ? (
-        <p className="text-center py-16 text-muted border border-hairline rounded-md">No skills claimed yet. Add your first above.</p>
+        <p className="text-center py-16 text-muted border border-white/10 rounded-md">No skills claimed yet. Add your first above.</p>
       ) : (
-        <div className="divide-y divide-hairline border-y border-hairline">
+        <div className="divide-y divide-hairline border-y border-white/10">
           {claims.map((claim) => (
             <div key={claim.id} className="flex flex-col sm:flex-row sm:items-center gap-3 py-4">
               <div className="flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-ink font-medium">{claim.skill_name}</span>
+                  <span className="text-white font-medium">{claim.skill_name}</span>
                   <Chip tone={claim.claim_type === "evidenced" ? "green" : "neutral"}>
                     {claim.claim_type === "evidenced" ? "Evidenced" : "Self-declared"}
                   </Chip>
@@ -240,7 +240,7 @@ function SkillsEditor() {
                 </button>
               )}
               <select value={claim.proficiency_level ?? ""} onChange={(e) => handleProficiency(claim.id, e.target.value)}
-                aria-label={`Proficiency for ${claim.skill_name}`} className="bg-canvas border border-hairline rounded-sm px-3 py-2 text-sm text-ink">
+                aria-label={`Proficiency for ${claim.skill_name}`} className="bg-void border border-white/10 rounded-sm px-3 py-2 text-sm text-white">
                 <option value="">Unset</option>
                 {PROFICIENCY.map((p) => <option key={p} value={p}>{p}</option>)}
               </select>

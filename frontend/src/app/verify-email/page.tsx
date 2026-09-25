@@ -37,24 +37,24 @@ function VerifyEmailInner() {
   }, [state, email]);
 
   return (
-    <main className="min-h-screen flex items-center justify-center p-6 bg-stone">
-      <div className="w-full max-w-md bg-canvas border border-hairline rounded-md p-10 text-center">
+    <main className="min-h-screen flex items-center justify-center p-6 bg-navy">
+      <div className="w-full max-w-md bg-void border border-white/10 rounded-md p-10 text-center">
         {state === "verifying" && (
           <>
             <div className="flex justify-center mb-6"><Spinner /></div>
-            <h1 className="text-card-heading font-display text-ink">Verifying your email…</h1>
+            <h1 className="text-card-heading font-display text-white">Verifying your email…</h1>
           </>
         )}
         {state === "done" && (
           <>
             <div className="w-12 h-12 rounded-full bg-green-wash border border-[#003c33]/30 text-[#003c33] flex items-center justify-center text-xl mx-auto mb-6">✓</div>
-            <h1 className="text-card-heading font-display text-ink mb-2">Email verified!</h1>
+            <h1 className="text-card-heading font-display text-white mb-2">Email verified!</h1>
             <p className="text-sm text-muted">Taking you to log in…</p>
           </>
         )}
         {state === "error" && (
           <>
-            <h1 className="text-card-heading font-display text-ink mb-4">Verification problem</h1>
+            <h1 className="text-card-heading font-display text-white mb-4">Verification problem</h1>
             <Notice kind="error">{message}</Notice>
             <p className="text-sm text-muted mt-6">
               Try <Link href="/login" className="text-blue underline underline-offset-4">logging in</Link> or sign up again.
